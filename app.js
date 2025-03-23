@@ -6,7 +6,7 @@ const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshow
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
-const MOCK_MODE = true 
+const MOCK_MODE = false 
 
 // DOM Elements
 const loadingIndicator = document.getElementById("loading")
