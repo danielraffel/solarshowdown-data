@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌞 Solar Showdown - Energy Face-off</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌞 Solar Showdown</h1>
+      <p class="subtitle">The ultimate energy face-off between Daniel and Steve</p>
+      
+      <div class="view-controls">
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe" class="timeframe-select">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+        
+        <div class="toggle-container">
+          <label for="roast-mode">Roast Mode:</label>
+          <label class="switch">
+            <input type="checkbox" id="roast-mode">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="loading-indicator" id="loading">
+        <div class="spinner"></div>
+        <p>Fetching solar data...</p>
+      </div>
+
+      <div class="error-message" id="error-message">
+        <p>😢 Couldn't fetch solar data. Please check your console for details.</p>
+      </div>
+
+      <div class="stats-container" id="stats-container">
+        <div class="stats-card daniel">
+          <h2>Daniel <span class="winner-badge" id="daniel-winner">👑</span></h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">Generated</div>
+              <div class="stat-value" id="daniel-generated">0 kWh</div>
+              <div class="stat-badge" id="daniel-generated-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Consumed</div>
+              <div class="stat-value" id="daniel-consumed">0 kWh</div>
+              <div class="stat-badge" id="daniel-consumed-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Sold Back</div>
+              <div class="stat-value" id="daniel-sold">0 kWh</div>
+              <div class="stat-badge" id="daniel-sold-badge"></div>
+            </div>
+            <div class="stat-item net-score">
+              <div class="stat-label">Net Score</div>
+              <div class="stat-value" id="daniel-net">0 kWh</div>
+            </div>
+          </div>
+          <div class="roast-message" id="daniel-roast"></div>
+        </div>
+
+        <div class="vs-badge">VS</div>
+
+        <div class="stats-card steve">
+          <h2>Steve <span class="winner-badge" id="steve-winner">👑</span></h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">Generated</div>
+              <div class="stat-value" id="steve-generated">0 kWh</div>
+              <div class="stat-badge" id="steve-generated-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Consumed</div>
+              <div class="stat-value" id="steve-consumed">0 kWh</div>
+              <div class="stat-badge" id="steve-consumed-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Sold Back</div>
+              <div class="stat-value" id="steve-sold">0 kWh</div>
+              <div class="stat-badge" id="steve-sold-badge"></div>
+            </div>
+            <div class="stat-item net-score">
+              <div class="stat-label">Net Score</div>
+              <div class="stat-value" id="steve-net">0 kWh</div>
+            </div>
+          </div>
+          <div class="roast-message" id="steve-roast"></div>
+        </div>
+      </div>
+
+      <div class="bonus-categories" id="bonus-categories">
+        <h3>🏆 Bonus Categories</h3>
+        <div class="bonus-grid">
+          <div class="bonus-item">
+            <div class="bonus-title">☀️ Solar MVP</div>
+            <div class="bonus-winner" id="solar-mvp">-</div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-title">⚡ Grid Hustler</div>
+            <div class="bonus-winner" id="grid-hustler">-</div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-title">🧛 Energy Vampire</div>
+            <div class="bonus-winner" id="energy-vampire">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ev-charging" id="ev-charging">
+        <h3>🚗 EV Charging Efficiency</h3>
+        <div class="ev-grid">
+          <div class="ev-card daniel">
+            <h4>Daniel's EV <span class="ev-badge" id="daniel-ev-badge"></span></h4>
+            <div class="ev-stats">
+              <div class="ev-stat">
+                <div class="ev-label">Miles Added</div>
+                <div class="ev-value" id="daniel-ev-miles">0 mi</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Total Energy</div>
+                <div class="ev-value" id="daniel-ev-energy">0 kWh</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Solar Percentage</div>
+                <div class="ev-value" id="daniel-ev-solar-percent">0%</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Solar Miles Ratio</div>
+                <div class="ev-value" id="daniel-ev-efficiency">0 mi/kWh</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ev-card steve">
+            <h4>Steve's EV <span class="ev-badge" id="steve-ev-badge"></span></h4>
+            <div class="ev-stats">
+              <div class="ev-stat">
+                <div class="ev-label">Miles Added</div>
+                <div class="ev-value" id="steve-ev-miles">0 mi</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Total Energy</div>
+                <div class="ev-value" id="steve-ev-energy">0 kWh</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Solar Percentage</div>
+                <div class="ev-value" id="steve-ev-solar-percent">0%</div>
+              </div>
+              <div class="ev-stat">
+                <div class="ev-label">Solar Miles Ratio</div>
+                <div class="ev-value" id="steve-ev-efficiency">0 mi/kWh</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="ev-explanation">
+          <p><strong>Solar Miles Ratio</strong> = Miles Added × Solar Percentage ÷ Total Energy</p>
+          <p>This metric rewards both efficiency (miles per kWh) and solar usage (higher solar percentage).</p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Data sourced from <a href="https://github.com/danielraffel/solarshowdown-data" target="_blank">GitHub</a></p>
+      <p>Built with vanilla JS and CSS • <a href="https://github.com/yourusername/solar-showdown" target="_blank">GitHub</a></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
