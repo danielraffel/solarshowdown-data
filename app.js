@@ -238,14 +238,28 @@ async function fetchAndUpdateData() {
           throw new Error("Failed to fetch data from GitHub")
         }
         
-        const danielData = await danielResponse.json()
-        const steveData = await steveResponse.json() || {}
+        let danielData = {};
+        let steveData = {};
+        
+        try {
+          danielData = await danielResponse.json();
+        } catch (e) {
+          console.error("Error parsing Daniel's data:", e);
+          danielData = { generated: 0, consumed: 0, exported: 0 };
+        }
+        
+        try {
+          steveData = await steveResponse.json();
+        } catch (e) {
+          console.error("Error parsing Steve's data:", e);
+          steveData = { generated: 0, consumed: 0, exported: 0 };
+        }
         
         data = {
           daniel: {
-            generated: danielData.generated,
-            consumed: danielData.consumed,
-            soldBack: danielData.exported
+            generated: danielData.generated || 0,
+            consumed: danielData.consumed || 0,
+            soldBack: danielData.exported || 0
           },
           steve: {
             generated: steveData.generated || 0,
