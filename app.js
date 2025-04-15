@@ -1,11 +1,11 @@
 // Solar Showdown - Main Application Logic
-console.log('App.js loaded - v2.0 - No roast mode')
+console.log('App.js loaded - v2.1 - Fixed data source')
 
 // Use a CORS proxy to avoid cross-origin issues
-const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
+const CORS_PROXY = "" // Remove CORS proxy since we're serving from same domain
 // Data URLs
-const DANIEL_DATA_URL = `${CORS_PROXY}https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/daniel.json`
-const STEVE_DATA_URL = `${CORS_PROXY}https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/steve.json`
+const DANIEL_DATA_URL = `daniel.json` // Local file path
+const STEVE_DATA_URL = `steve.json` // Local file path
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
 
@@ -135,11 +135,20 @@ async function fetchAndUpdateData() {
     let data
 
     if (MOCK_MODE) {
+      console.log('Using mock data')
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
-      console.log('Fetching from URLs:', { daniel: DANIEL_DATA_URL, steve: STEVE_DATA_URL })
-      // Fetch real data from GitHub
+      console.log('Starting fetch from:', { 
+        danielUrl: DANIEL_DATA_URL, 
+        steveUrl: STEVE_DATA_URL,
+        absolute: {
+          daniel: new URL(DANIEL_DATA_URL, window.location.href).href,
+          steve: new URL(STEVE_DATA_URL, window.location.href).href
+        }
+      })
+      
+      // Fetch real data
       try {
         const [danielResponse, steveResponse] = await Promise.all([
           fetch(DANIEL_DATA_URL),
@@ -147,29 +156,60 @@ async function fetchAndUpdateData() {
         ])
 
         console.log('Fetch responses:', {
-          daniel: { ok: danielResponse.ok, status: danielResponse.status },
-          steve: { ok: steveResponse.ok, status: steveResponse.status }
+          daniel: { 
+            ok: danielResponse.ok, 
+            status: danielResponse.status,
+            statusText: danielResponse.statusText,
+          },
+          steve: { 
+            ok: steveResponse.ok, 
+            status: steveResponse.status,
+            statusText: steveResponse.statusText
+          }
         })
 
-        if (!danielResponse.ok || !steveResponse.ok) {
-          throw new Error(`Failed to fetch data: Daniel (${danielResponse.status}), Steve (${steveResponse.status})`)
+        if (!danielResponse.ok) {
+          throw new Error(`Failed to fetch Daniel data: ${danielResponse.status} ${danielResponse.statusText}`)
+        }
+        
+        if (!steveResponse.ok) {
+          throw new Error(`Failed to fetch Steve data: ${steveResponse.status} ${steveResponse.statusText}`)
         }
 
         let danielData = {}
         let steveData = {}
+        
+        // First get the raw text to debug JSON format
         try {
-          danielData = await danielResponse.json()
-          console.log('Daniel data:', danielData)
+          const danielText = await danielResponse.text();
+          console.log('Daniel JSON text:', danielText);
+          
+          try {
+            danielData = JSON.parse(danielText);
+            console.log('Daniel data parsed:', danielData);
+          } catch (e) {
+            console.error('Error parsing Daniel JSON:', e, 'Raw text was:', danielText);
+            danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
+          }
         } catch (e) {
-          console.error('Error parsing Daniel JSON:', e)
-          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+          console.error('Error getting Daniel text:', e);
+          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
         }
+        
         try {
-          steveData = await steveResponse.json()
-          console.log('Steve data:', steveData)
+          const steveText = await steveResponse.text();
+          console.log('Steve JSON text:', steveText);
+          
+          try {
+            steveData = JSON.parse(steveText);
+            console.log('Steve data parsed:', steveData);
+          } catch (e) {
+            console.error('Error parsing Steve JSON:', e, 'Raw text was:', steveText);
+            steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
+          }
         } catch (e) {
-          console.error('Error parsing Steve JSON:', e)
-          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+          console.error('Error getting Steve text:', e);
+          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
         }
 
         data = {
