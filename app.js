@@ -219,6 +219,9 @@ const roastMessages = {
   ],
 }
 
+// Add this near the other DOM element queries
+const roastModeToggle = document.getElementById("roast-mode")
+
 // Initialize the application
 function init() {
   // No event listeners for timeframe or roast mode
@@ -575,7 +578,7 @@ window.addEventListener("error", (event) => {
 })
 
 // Add event listener to update roast messages when the toggle changes
-if (typeof roastModeToggle !== 'undefined' && roastModeToggle) {
+if (roastModeToggle) {
   roastModeToggle.addEventListener("change", function () {
     if (this.checked) {
       updateRoastMessages()
