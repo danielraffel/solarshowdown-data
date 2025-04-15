@@ -62,11 +62,17 @@ const mockData = {
       generated: 21.8,
       consumed: 14.2,
       soldBack: 8.3,
+      imported: 1.2,
+      discharged: 2.1,
+      maxPv: 5.5,
     },
     steve: {
       generated: 19.5,
       consumed: 16.7,
       soldBack: 5.2,
+      imported: 1.5,
+      discharged: 1.8,
+      maxPv: 4.9,
     },
   },
   weekly: {
