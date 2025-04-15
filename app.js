@@ -296,9 +296,9 @@ function updateStats(data) {
   updateBonusCategories(data)
 
   // Update roast messages if enabled
-  if (roastModeToggle.checked) {
-    updateRoastMessages(data)
-  }
+  // if (roastModeToggle.checked) {
+  //   updateRoastMessages(data)
+  // }
 
   // Update badges
   updateBadges(data)
@@ -416,8 +416,21 @@ function updateBadges(data) {
   steveGeneratedBadge.style.display = "none"
   steveConsumedBadge.style.display = "none"
   steveSoldBadge.style.display = "none"
+  // New fields
+  const danielImportedBadge = document.getElementById("daniel-imported-badge")
+  const steveImportedBadge = document.getElementById("steve-imported-badge")
+  const danielDischargedBadge = document.getElementById("daniel-discharged-badge")
+  const steveDischargedBadge = document.getElementById("steve-discharged-badge")
+  const danielMaxpvBadge = document.getElementById("daniel-maxpv-badge")
+  const steveMaxpvBadge = document.getElementById("steve-maxpv-badge")
+  danielImportedBadge.style.display = "none"
+  steveImportedBadge.style.display = "none"
+  danielDischargedBadge.style.display = "none"
+  steveDischargedBadge.style.display = "none"
+  danielMaxpvBadge.style.display = "none"
+  steveMaxpvBadge.style.display = "none"
 
-  // Set badges based on who has better stats
+  // Set badges for generated
   if (data.daniel.generated > data.steve.generated) {
     danielGeneratedBadge.textContent = "🌟"
     danielGeneratedBadge.style.display = "block"
@@ -425,7 +438,7 @@ function updateBadges(data) {
     steveGeneratedBadge.textContent = "🌟"
     steveGeneratedBadge.style.display = "block"
   }
-
+  // Sold back
   if (data.daniel.soldBack > data.steve.soldBack) {
     danielSoldBadge.textContent = "💰"
     danielSoldBadge.style.display = "block"
@@ -433,13 +446,52 @@ function updateBadges(data) {
     steveSoldBadge.textContent = "💰"
     steveSoldBadge.style.display = "block"
   }
-
+  // Consumed (lower is better)
   if (data.daniel.consumed < data.steve.consumed) {
     danielConsumedBadge.textContent = "🌱"
     danielConsumedBadge.style.display = "block"
   } else if (data.steve.consumed < data.daniel.consumed) {
     steveConsumedBadge.textContent = "🌱"
     steveConsumedBadge.style.display = "block"
+  }
+  // Imported (lower is better)
+  if (data.daniel.imported < data.steve.imported) {
+    danielImportedBadge.textContent = "🔌"
+    danielImportedBadge.style.display = "block"
+  } else if (data.steve.imported < data.daniel.imported) {
+    steveImportedBadge.textContent = "🔌"
+    steveImportedBadge.style.display = "block"
+  } else if (data.daniel.imported === data.steve.imported) {
+    danielImportedBadge.textContent = "🤝"
+    steveImportedBadge.textContent = "🤝"
+    danielImportedBadge.style.display = "block"
+    steveImportedBadge.style.display = "block"
+  }
+  // Discharged (lower is better)
+  if (data.daniel.discharged < data.steve.discharged) {
+    danielDischargedBadge.textContent = "🪫"
+    danielDischargedBadge.style.display = "block"
+  } else if (data.steve.discharged < data.daniel.discharged) {
+    steveDischargedBadge.textContent = "🪫"
+    steveDischargedBadge.style.display = "block"
+  } else if (data.daniel.discharged === data.steve.discharged) {
+    danielDischargedBadge.textContent = "🤝"
+    steveDischargedBadge.textContent = "🤝"
+    danielDischargedBadge.style.display = "block"
+    steveDischargedBadge.style.display = "block"
+  }
+  // Max PV (higher is better)
+  if (data.daniel.maxPv > data.steve.maxPv) {
+    danielMaxpvBadge.textContent = "☀️"
+    danielMaxpvBadge.style.display = "block"
+  } else if (data.steve.maxPv > data.daniel.maxPv) {
+    steveMaxpvBadge.textContent = "☀️"
+    steveMaxpvBadge.style.display = "block"
+  } else if (data.daniel.maxPv === data.steve.maxPv) {
+    danielMaxpvBadge.textContent = "🤝"
+    steveMaxpvBadge.textContent = "🤝"
+    danielMaxpvBadge.style.display = "block"
+    steveMaxpvBadge.style.display = "block"
   }
 }
 
