@@ -580,7 +580,6 @@ if (typeof roastModeToggle !== 'undefined' && roastModeToggle) {
     if (this.checked) {
       updateRoastMessages()
     } else {
-      // Hide roast messages when toggle is turned off
       danielRoastEl.style.display = "none"
       steveRoastEl.style.display = "none"
     }
