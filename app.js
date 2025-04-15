@@ -19,7 +19,6 @@ const danielConsumedEl = document.getElementById("daniel-consumed")
 const danielSoldEl = document.getElementById("daniel-sold")
 const danielNetEl = document.getElementById("daniel-net")
 const danielWinnerBadge = document.getElementById("daniel-winner")
-const danielRoastEl = document.getElementById("daniel-roast")
 const danielGeneratedBadge = document.getElementById("daniel-generated-badge")
 const danielConsumedBadge = document.getElementById("daniel-consumed-badge")
 const danielSoldBadge = document.getElementById("daniel-sold-badge")
@@ -30,23 +29,9 @@ const steveConsumedEl = document.getElementById("steve-consumed")
 const steveSoldEl = document.getElementById("steve-sold")
 const steveNetEl = document.getElementById("steve-net")
 const steveWinnerBadge = document.getElementById("steve-winner")
-const steveRoastEl = document.getElementById("steve-roast")
 const steveGeneratedBadge = document.getElementById("steve-generated-badge")
 const steveConsumedBadge = document.getElementById("steve-consumed-badge")
 const steveSoldBadge = document.getElementById("steve-sold-badge")
-
-// EV elements
-const danielEvMilesEl = document.getElementById("daniel-ev-miles")
-const danielEvEnergyEl = document.getElementById("daniel-ev-energy")
-const danielEvSolarPercentEl = document.getElementById("daniel-ev-solar-percent")
-const danielEvEfficiencyEl = document.getElementById("daniel-ev-efficiency")
-const danielEvBadgeEl = document.getElementById("daniel-ev-badge")
-
-const steveEvMilesEl = document.getElementById("steve-ev-miles")
-const steveEvEnergyEl = document.getElementById("steve-ev-energy")
-const steveEvSolarPercentEl = document.getElementById("steve-ev-solar-percent")
-const steveEvEfficiencyEl = document.getElementById("steve-ev-efficiency")
-const steveEvBadgeEl = document.getElementById("steve-ev-badge")
 
 // Bonus category elements
 const solarMvpEl = document.getElementById("solar-mvp")
@@ -131,100 +116,8 @@ const mockData = {
   },
 }
 
-// EV charging data
-const evMockData = {
-  daily: {
-    daniel: {
-      milesAdded: 42,
-      totalEnergy: 12.5,
-      solarPercentage: 78,
-    },
-    steve: {
-      milesAdded: 38,
-      totalEnergy: 10.2,
-      solarPercentage: 85,
-    },
-  },
-  weekly: {
-    daniel: {
-      milesAdded: 215,
-      totalEnergy: 64.8,
-      solarPercentage: 72,
-    },
-    steve: {
-      milesAdded: 198,
-      totalEnergy: 58.3,
-      solarPercentage: 68,
-    },
-  },
-  monthly: {
-    daniel: {
-      milesAdded: 920,
-      totalEnergy: 276.5,
-      solarPercentage: 65,
-    },
-    steve: {
-      milesAdded: 875,
-      totalEnergy: 245.8,
-      solarPercentage: 70,
-    },
-  },
-  yearly: {
-    daniel: {
-      milesAdded: 11250,
-      totalEnergy: 3375.2,
-      solarPercentage: 62,
-    },
-    steve: {
-      milesAdded: 10850,
-      totalEnergy: 3042.6,
-      solarPercentage: 68,
-    },
-  },
-}
-
-// Roast messages
-const roastMessages = {
-  highConsumption: [
-    "Are you mining Bitcoin in your basement?",
-    "Did you leave every light on in the house?",
-    "Your electricity meter is spinning like a DJ.",
-    "Your power bill must look like a phone number.",
-    "Do you own stock in the power company?",
-    "Your house glows so bright, astronauts can see it from space.",
-  ],
-  lowGeneration: [
-    "Did you install your panels in a cave?",
-    "Your panels need a pep talk.",
-    "Have you tried cleaning those panels... ever?",
-    "Your solar panels are on vacation.",
-    "Are your solar panels playing hide and seek with the sun?",
-    "Your panels generate about as much energy as a potato clock.",
-  ],
-  highGeneration: [
-    "Your panels are working overtime!",
-    "Did you install extra panels when no one was looking?",
-    "Your roof is basically a mini power plant.",
-    "Those panels are showing off!",
-    "Did you steal the sun and put it on your roof?",
-    "Your panels are so efficient they might start powering the neighbors too.",
-  ],
-  lowConsumption: [
-    "Do you even use electricity?",
-    "Living that candlelight lifestyle, huh?",
-    "Your appliances must be on strike.",
-    "Are you actually living in your house?",
-    "Do you cook with a magnifying glass?",
-    "Your power consumption is lower than a hibernating bear's heart rate.",
-  ],
-}
-
-// At the top with other DOM queries
-const roastModeToggle = document.getElementById("roast-mode")
-
 // Initialize the application
 function init() {
-  // No event listeners for timeframe or roast mode
   fetchAndUpdateData()
 }
 
@@ -321,7 +214,7 @@ function updateStats(data) {
     return
   }
   
-  console.log('Updating stats with data:', data) // Debug log
+  console.log('Updating stats with data:', data)
   
   // Calculate net scores
   const danielNet = calculateNetScore(data.daniel)
@@ -398,75 +291,23 @@ function determineWinner(danielNet, steveNet) {
 function updateBonusCategories(data) {
   // Solar MVP
   document.getElementById('solar-mvp').textContent = 
-    data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
+    data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'
     
   // Grid Hustler
   document.getElementById('grid-hustler').textContent = 
-    data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
+    data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve'
     
   // Energy Vampire
   document.getElementById('energy-vampire').textContent = 
-    data.daniel.consumed > data.steve.consumed ? 'Daniel' : 'Steve';
+    data.daniel.consumed > data.steve.consumed ? 'Daniel' : 'Steve'
     
   // Battery Boss
   document.getElementById('battery-boss').textContent = 
-    data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve';
+    data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve'
     
   // Peak Performer
   document.getElementById('peak-performer').textContent = 
-    data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve';
-}
-
-// Update roast messages: always show
-function updateRoastMessages(data) {
-  danielRoastEl.textContent = ""
-  steveRoastEl.textContent = ""
-  danielRoastEl.style.display = "block"
-  steveRoastEl.style.display = "block"
-  if (!data) return
-  if (data.daniel && data.steve) {
-    let danielRoasted = false
-    if (data.daniel.consumed > data.steve.consumed * 1.2) {
-      danielRoastEl.textContent = getRandomRoast("highConsumption")
-      danielRoasted = true
-    } else if (data.daniel.generated < data.steve.generated * 0.8) {
-      danielRoastEl.textContent = getRandomRoast("lowGeneration")
-      danielRoasted = true
-    } else if (data.daniel.generated > data.steve.generated * 1.2) {
-      danielRoastEl.textContent = getRandomRoast("highGeneration")
-      danielRoasted = true
-    } else if (data.daniel.consumed < data.steve.consumed * 0.8) {
-      danielRoastEl.textContent = getRandomRoast("lowConsumption")
-      danielRoasted = true
-    }
-    if (!danielRoasted) {
-      danielRoastEl.textContent = "Your energy usage is so average, it's boring."
-    }
-    let steveRoasted = false
-    if (data.steve.consumed > data.daniel.consumed * 1.2) {
-      steveRoastEl.textContent = getRandomRoast("highConsumption")
-      steveRoasted = true
-    } else if (data.steve.generated < data.daniel.generated * 0.8) {
-      steveRoastEl.textContent = getRandomRoast("lowGeneration")
-      steveRoasted = true
-    } else if (data.steve.generated > data.daniel.generated * 1.2) {
-      steveRoastEl.textContent = getRandomRoast("highGeneration")
-      steveRoasted = true
-    } else if (data.steve.consumed < data.daniel.consumed * 0.8) {
-      steveRoastEl.textContent = getRandomRoast("lowConsumption")
-      steveRoasted = true
-    }
-    if (!steveRoasted) {
-      steveRoastEl.textContent = "Steve's energy stats are as exciting as watching paint dry."
-    }
-  }
-}
-
-// Get a random roast message from the category
-function getRandomRoast(category) {
-  const messages = roastMessages[category]
-  const randomIndex = Math.floor(Math.random() * messages.length)
-  return messages[randomIndex]
+    data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve'
 }
 
 // Update badges for stats
@@ -580,16 +421,4 @@ window.addEventListener("error", (event) => {
   errorMessage.style.display = "block"
   loadingIndicator.style.display = "none"
 })
-
-// Add event listener to update roast messages when the toggle changes
-if (roastModeToggle) {
-  roastModeToggle.addEventListener("change", function () {
-    if (this.checked) {
-      updateRoastMessages()
-    } else {
-      danielRoastEl.style.display = "none"
-      steveRoastEl.style.display = "none"
-    }
-  })
-}
 
