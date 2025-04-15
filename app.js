@@ -1,10 +1,10 @@
 // Solar Showdown - Main Application Logic
 
-// Configuration
-const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/daniel.json"
-const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/steve.json"
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
+// Data URLs
+const DANIEL_DATA_URL = `${CORS_PROXY}https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/daniel.json`
+const STEVE_DATA_URL = `${CORS_PROXY}https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/steve.json`
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
 
@@ -217,49 +217,58 @@ async function fetchAndUpdateData() {
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
-      data = mockData[timeframe] // fallback for non-daily
       // Fetch real data from GitHub
-      const danielResponse = await fetch(DANIEL_DATA_URL)
-      const steveResponse = await fetch(STEVE_DATA_URL)
-      if (danielResponse.ok && steveResponse.ok) {
-        let danielData = {}
-        let steveData = {}
-        try {
-          danielData = await danielResponse.json()
-        } catch (e) {
-          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
-        }
-        try {
-          steveData = await steveResponse.json()
-        } catch (e) {
-          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
-        }
-        data = {
-          daniel: {
-            generated: danielData.generated || 0,
-            consumed: danielData.consumed || 0,
-            soldBack: danielData.exported || 0,
-            imported: danielData.imported || 0,
-            discharged: danielData.discharged || 0,
-            maxPv: danielData.maxPv || 0
-          },
-          steve: {
-            generated: steveData.generated || 0,
-            consumed: steveData.consumed || 0,
-            soldBack: steveData.exported || 0,
-            imported: steveData.imported || 0,
-            discharged: steveData.discharged || 0,
-            maxPv: steveData.maxPv || 0
-          }
+      const [danielResponse, steveResponse] = await Promise.all([
+        fetch(DANIEL_DATA_URL),
+        fetch(STEVE_DATA_URL)
+      ])
+
+      if (!danielResponse.ok || !steveResponse.ok) {
+        throw new Error('Failed to fetch data from GitHub')
+      }
+
+      let danielData = {}
+      let steveData = {}
+      try {
+        danielData = await danielResponse.json()
+      } catch (e) {
+        console.error('Error parsing Daniel data:', e)
+        danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+      }
+      try {
+        steveData = await steveResponse.json()
+      } catch (e) {
+        console.error('Error parsing Steve data:', e)
+        steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+      }
+
+      data = {
+        daniel: {
+          generated: danielData.generated || 0,
+          consumed: danielData.consumed || 0,
+          soldBack: danielData.exported || 0,
+          imported: danielData.imported || 0,
+          discharged: danielData.discharged || 0,
+          maxPv: danielData.maxPv || 0
+        },
+        steve: {
+          generated: steveData.generated || 0,
+          consumed: steveData.consumed || 0,
+          soldBack: steveData.exported || 0,
+          imported: steveData.imported || 0,
+          discharged: steveData.discharged || 0,
+          maxPv: steveData.maxPv || 0
         }
       }
     }
 
+    console.log('Fetched data:', data)
     updateStats(data)
     loadingIndicator.style.display = "none"
     statsContainer.style.opacity = "1"
     updateRoastMessages(data)
   } catch (error) {
+    console.error('Error fetching data:', error)
     loadingIndicator.style.display = "none"
     errorMessage.style.display = "block"
     statsContainer.style.opacity = "0.5"
@@ -268,26 +277,50 @@ async function fetchAndUpdateData() {
 
 // Update the statistics display
 function updateStats(data) {
+  if (!data || !data.daniel || !data.steve) {
+    console.warn('Missing data for updateStats:', data)
+    return
+  }
   // Calculate net scores
   const danielNet = calculateNetScore(data.daniel)
   const steveNet = calculateNetScore(data.steve)
 
-  // Update display values
-  danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
-  danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
-  danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
-  danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
-  document.getElementById("daniel-imported").textContent = `${data.daniel.imported.toFixed(1)} kWh`
-  document.getElementById("daniel-discharged").textContent = `${data.daniel.discharged.toFixed(1)} kWh`
-  document.getElementById("daniel-maxpv").textContent = `${data.daniel.maxPv.toFixed(1)} kW`
+  // Update display values with null checks
+  if (danielGeneratedEl) danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
+  else console.warn('danielGeneratedEl missing')
+  if (danielConsumedEl) danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
+  else console.warn('danielConsumedEl missing')
+  if (danielSoldEl) danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
+  else console.warn('danielSoldEl missing')
+  if (danielNetEl) danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
+  else console.warn('danielNetEl missing')
+  const danielImportedEl = document.getElementById("daniel-imported")
+  if (danielImportedEl) danielImportedEl.textContent = `${data.daniel.imported.toFixed(1)} kWh`
+  else console.warn('danielImportedEl missing')
+  const danielDischargedEl = document.getElementById("daniel-discharged")
+  if (danielDischargedEl) danielDischargedEl.textContent = `${data.daniel.discharged.toFixed(1)} kWh`
+  else console.warn('danielDischargedEl missing')
+  const danielMaxpvEl = document.getElementById("daniel-maxpv")
+  if (danielMaxpvEl) danielMaxpvEl.textContent = `${data.daniel.maxPv.toFixed(1)} kW`
+  else console.warn('danielMaxpvEl missing')
 
-  steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
-  steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
-  steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
-  steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
-  document.getElementById("steve-imported").textContent = `${data.steve.imported.toFixed(1)} kWh`
-  document.getElementById("steve-discharged").textContent = `${data.steve.discharged.toFixed(1)} kWh`
-  document.getElementById("steve-maxpv").textContent = `${data.steve.maxPv.toFixed(1)} kW`
+  if (steveGeneratedEl) steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
+  else console.warn('steveGeneratedEl missing')
+  if (steveConsumedEl) steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
+  else console.warn('steveConsumedEl missing')
+  if (steveSoldEl) steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
+  else console.warn('steveSoldEl missing')
+  if (steveNetEl) steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
+  else console.warn('steveNetEl missing')
+  const steveImportedEl = document.getElementById("steve-imported")
+  if (steveImportedEl) steveImportedEl.textContent = `${data.steve.imported.toFixed(1)} kWh`
+  else console.warn('steveImportedEl missing')
+  const steveDischargedEl = document.getElementById("steve-discharged")
+  if (steveDischargedEl) steveDischargedEl.textContent = `${data.steve.discharged.toFixed(1)} kWh`
+  else console.warn('steveDischargedEl missing')
+  const steveMaxpvEl = document.getElementById("steve-maxpv")
+  if (steveMaxpvEl) steveMaxpvEl.textContent = `${data.steve.maxPv.toFixed(1)} kW`
+  else console.warn('steveMaxpvEl missing')
 
   // Determine winner
   determineWinner(danielNet, steveNet)
