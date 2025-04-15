@@ -221,7 +221,13 @@
     </footer>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // Add cache-busting parameter to force browser to load latest version
+    const scriptEl = document.createElement('script');
+    scriptEl.src = `app.js?v=${new Date().getTime()}`;
+    document.body.appendChild(scriptEl);
+  </script>
+  <!-- <script src="app.js"></script> -->
 </body>
 </html>
 

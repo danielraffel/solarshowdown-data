@@ -1,4 +1,5 @@
 // Solar Showdown - Main Application Logic
+console.log('App.js loaded - v2.0 - No roast mode')
 
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
