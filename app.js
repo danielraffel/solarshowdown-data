@@ -12,8 +12,6 @@ const MOCK_MODE = false
 const loadingIndicator = document.getElementById("loading")
 const errorMessage = document.getElementById("error-message")
 const statsContainer = document.getElementById("stats-container")
-const timeframeSelect = document.getElementById("timeframe")
-const roastModeToggle = document.getElementById("roast-mode")
 
 // Daniel elements
 const danielGeneratedEl = document.getElementById("daniel-generated")
@@ -54,6 +52,8 @@ const steveEvBadgeEl = document.getElementById("steve-ev-badge")
 const solarMvpEl = document.getElementById("solar-mvp")
 const gridHustlerEl = document.getElementById("grid-hustler")
 const energyVampireEl = document.getElementById("energy-vampire")
+const batteryBossEl = document.getElementById("battery-boss")
+const peakPerformerEl = document.getElementById("peak-performer")
 
 // Mock data for development (when API is not available)
 const mockData = {
@@ -197,21 +197,13 @@ const roastMessages = {
 
 // Initialize the application
 function init() {
-  // Set up event listeners
-  timeframeSelect.addEventListener("change", fetchAndUpdateData)
-
-  // Initial data fetch
+  // No event listeners for timeframe or roast mode
   fetchAndUpdateData()
-
-  // Set up roast mode toggle listener
-  roastModeToggle.addEventListener("change", () => {
-    updateRoastMessages()
-  })
 }
 
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
-  const timeframe = timeframeSelect.value
+  const timeframe = "daily" // Always use daily
 
   // Show loading state
   loadingIndicator.style.display = "flex"
@@ -222,67 +214,52 @@ async function fetchAndUpdateData() {
     let data
 
     if (MOCK_MODE) {
-      // Use mock data for development
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
-      // For non-daily timeframes, fall back to mock data
-      if (timeframe !== "daily") {
-        data = mockData[timeframe]
-      } else {
-        // Fetch real data from GitHub
-        const danielResponse = await fetch(DANIEL_DATA_URL)
-        const steveResponse = await fetch(STEVE_DATA_URL)
-        
-        if (!danielResponse.ok || !steveResponse.ok) {
-          throw new Error("Failed to fetch data from GitHub")
-        }
-        
-        let danielData = {};
-        let steveData = {};
-        
+      data = mockData[timeframe] // fallback for non-daily
+      // Fetch real data from GitHub
+      const danielResponse = await fetch(DANIEL_DATA_URL)
+      const steveResponse = await fetch(STEVE_DATA_URL)
+      if (danielResponse.ok && steveResponse.ok) {
+        let danielData = {}
+        let steveData = {}
         try {
-          danielData = await danielResponse.json();
+          danielData = await danielResponse.json()
         } catch (e) {
-          console.error("Error parsing Daniel's data:", e);
-          danielData = { generated: 0, consumed: 0, exported: 0 };
+          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
         }
-        
         try {
-          steveData = await steveResponse.json();
+          steveData = await steveResponse.json()
         } catch (e) {
-          console.error("Error parsing Steve's data:", e);
-          steveData = { generated: 0, consumed: 0, exported: 0 };
+          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
         }
-        
         data = {
           daniel: {
             generated: danielData.generated || 0,
             consumed: danielData.consumed || 0,
-            soldBack: danielData.exported || 0
+            soldBack: danielData.exported || 0,
+            imported: danielData.imported || 0,
+            discharged: danielData.discharged || 0,
+            maxPv: danielData.maxPv || 0
           },
           steve: {
             generated: steveData.generated || 0,
             consumed: steveData.consumed || 0,
-            soldBack: steveData.exported || 0
+            soldBack: steveData.exported || 0,
+            imported: steveData.imported || 0,
+            discharged: steveData.discharged || 0,
+            maxPv: steveData.maxPv || 0
           }
         }
       }
     }
 
-    // Update the UI with the fetched data
     updateStats(data)
-
-    // Hide loading state
     loadingIndicator.style.display = "none"
     statsContainer.style.opacity = "1"
-
-    // Update EV charging stats
-    updateEvChargingStats(timeframe)
+    updateRoastMessages(data)
   } catch (error) {
-    console.error("Error fetching data:", error)
-
-    // Show error message
     loadingIndicator.style.display = "none"
     errorMessage.style.display = "block"
     statsContainer.style.opacity = "0.5"
@@ -300,11 +277,17 @@ function updateStats(data) {
   danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
   danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
   danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
+  document.getElementById("daniel-imported").textContent = `${data.daniel.imported.toFixed(1)} kWh`
+  document.getElementById("daniel-discharged").textContent = `${data.daniel.discharged.toFixed(1)} kWh`
+  document.getElementById("daniel-maxpv").textContent = `${data.daniel.maxPv.toFixed(1)} kW`
 
   steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
   steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
   steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
   steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
+  document.getElementById("steve-imported").textContent = `${data.steve.imported.toFixed(1)} kWh`
+  document.getElementById("steve-discharged").textContent = `${data.steve.discharged.toFixed(1)} kWh`
+  document.getElementById("steve-maxpv").textContent = `${data.steve.maxPv.toFixed(1)} kW`
 
   // Determine winner
   determineWinner(danielNet, steveNet)
@@ -314,7 +297,7 @@ function updateStats(data) {
 
   // Update roast messages if enabled
   if (roastModeToggle.checked) {
-    updateRoastMessages()
+    updateRoastMessages(data)
   }
 
   // Update badges
@@ -351,58 +334,36 @@ function determineWinner(danielNet, steveNet) {
 
 // Update bonus categories
 function updateBonusCategories(data) {
-  // Solar MVP - most generated
-  if (data.daniel.generated > data.steve.generated) {
-    solarMvpEl.textContent = "Daniel 🏆"
-  } else if (data.steve.generated > data.daniel.generated) {
-    solarMvpEl.textContent = "Steve 🏆"
-  } else {
-    solarMvpEl.textContent = "Tie 🤝"
-  }
-
-  // Grid Hustler - most sold back
-  if (data.daniel.soldBack > data.steve.soldBack) {
-    gridHustlerEl.textContent = "Daniel 🏆"
-  } else if (data.steve.soldBack > data.daniel.soldBack) {
-    gridHustlerEl.textContent = "Steve 🏆"
-  } else {
-    gridHustlerEl.textContent = "Tie 🤝"
-  }
-
-  // Energy Vampire - most consumed (anti-award)
-  if (data.daniel.consumed > data.steve.consumed) {
-    energyVampireEl.textContent = "Daniel 🧛"
-  } else if (data.steve.consumed > data.daniel.consumed) {
-    energyVampireEl.textContent = "Steve 🧛"
-  } else {
-    energyVampireEl.textContent = "Tie 🤝"
-  }
+  // Solar MVP
+  document.getElementById('solar-mvp').textContent = 
+    data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
+    
+  // Grid Hustler
+  document.getElementById('grid-hustler').textContent = 
+    data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
+    
+  // Energy Vampire
+  document.getElementById('energy-vampire').textContent = 
+    data.daniel.consumed > data.steve.consumed ? 'Daniel' : 'Steve';
+    
+  // Battery Boss
+  document.getElementById('battery-boss').textContent = 
+    data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve';
+    
+  // Peak Performer
+  document.getElementById('peak-performer').textContent = 
+    data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve';
 }
 
-// Update roast messages
-function updateRoastMessages() {
-  const timeframe = timeframeSelect.value
-  const data = MOCK_MODE ? mockData[timeframe] : {} // Replace with actual data when not in mock mode
-
-  // Reset roast messages
+// Update roast messages: always show
+function updateRoastMessages(data) {
   danielRoastEl.textContent = ""
   steveRoastEl.textContent = ""
-  danielRoastEl.style.display = "none"
-  steveRoastEl.style.display = "none"
-
-  if (!roastModeToggle.checked) {
-    return
-  }
-
-  // Show roast message containers
   danielRoastEl.style.display = "block"
   steveRoastEl.style.display = "block"
-
-  // Generate roast messages based on stats
+  if (!data) return
   if (data.daniel && data.steve) {
-    // Daniel's roast - always show at least one roast message when enabled
     let danielRoasted = false
-
     if (data.daniel.consumed > data.steve.consumed * 1.2) {
       danielRoastEl.textContent = getRandomRoast("highConsumption")
       danielRoasted = true
@@ -416,15 +377,10 @@ function updateRoastMessages() {
       danielRoastEl.textContent = getRandomRoast("lowConsumption")
       danielRoasted = true
     }
-
-    // If no condition was met, show a default roast
     if (!danielRoasted) {
       danielRoastEl.textContent = "Your energy usage is so average, it's boring."
     }
-
-    // Steve's roast - always show at least one roast message when enabled
     let steveRoasted = false
-
     if (data.steve.consumed > data.daniel.consumed * 1.2) {
       steveRoastEl.textContent = getRandomRoast("highConsumption")
       steveRoasted = true
@@ -438,24 +394,11 @@ function updateRoastMessages() {
       steveRoastEl.textContent = getRandomRoast("lowConsumption")
       steveRoasted = true
     }
-
-    // If no condition was met, show a default roast
     if (!steveRoasted) {
       steveRoastEl.textContent = "Steve's energy stats are as exciting as watching paint dry."
     }
   }
 }
-
-// Add event listener to update roast messages when the toggle changes
-roastModeToggle.addEventListener("change", function () {
-  if (this.checked) {
-    updateRoastMessages()
-  } else {
-    // Hide roast messages when toggle is turned off
-    danielRoastEl.style.display = "none"
-    steveRoastEl.style.display = "none"
-  }
-})
 
 // Get a random roast message from the category
 function getRandomRoast(category) {
@@ -500,68 +443,20 @@ function updateBadges(data) {
   }
 }
 
-// Update EV charging stats
-function updateEvChargingStats(timeframe) {
-  const evData = evMockData[timeframe]
-
-  if (!evData) return
-
-  // Calculate solar miles ratio (Miles × Solar% ÷ Total Energy)
-  const danielSolarMilesRatio = calculateSolarMilesRatio(evData.daniel)
-  const steveSolarMilesRatio = calculateSolarMilesRatio(evData.steve)
-
-  // Update display values
-  danielEvMilesEl.textContent = `${evData.daniel.milesAdded} mi`
-  danielEvEnergyEl.textContent = `${evData.daniel.totalEnergy.toFixed(1)} kWh`
-  const mi = "mi"
-  danielEvEnergyEl.textContent = `${evData.daniel.totalEnergy.toFixed(1)} kWh`
-  danielEvSolarPercentEl.textContent = `${evData.daniel.solarPercentage}%`
-  danielEvEfficiencyEl.textContent = `${danielSolarMilesRatio.toFixed(2)}`
-
-  steveEvMilesEl.textContent = `${evData.steve.milesAdded} mi`
-  steveEvEnergyEl.textContent = `${evData.steve.totalEnergy.toFixed(1)} kWh`
-  steveEvSolarPercentEl.textContent = `${evData.steve.solarPercentage}%`
-  steveEvEfficiencyEl.textContent = `${steveSolarMilesRatio.toFixed(2)}`
-
-  // Determine EV charging winner
-  determineEvWinner(danielSolarMilesRatio, steveSolarMilesRatio)
-}
-
-// Calculate Solar Miles Ratio
-function calculateSolarMilesRatio(evData) {
-  return (evData.milesAdded * (evData.solarPercentage / 100)) / evData.totalEnergy
-}
-
-// Determine EV charging winner
-function determineEvWinner(danielRatio, steveRatio) {
-  // Reset previous styling
-  document.querySelector(".ev-card.daniel").classList.remove("ev-winner")
-  document.querySelector(".ev-card.steve").classList.remove("ev-winner")
-  danielEvBadgeEl.textContent = ""
-  steveEvBadgeEl.textContent = ""
-
-  if (danielRatio > steveRatio) {
-    // Daniel wins
-    danielEvBadgeEl.textContent = "⚡ Solar Champion"
-    document.querySelector(".ev-card.daniel").classList.add("ev-winner")
-  } else if (steveRatio > danielRatio) {
-    // Steve wins
-    steveEvBadgeEl.textContent = "⚡ Solar Champion"
-    document.querySelector(".ev-card.steve").classList.add("ev-winner")
-  } else {
-    // It's a tie
-    danielEvBadgeEl.textContent = "🤝 Tied"
-    steveEvBadgeEl.textContent = "🤝 Tied"
-  }
-}
-
 // Helper function to simulate network delay for mock data
 function simulateNetworkDelay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 // Initialize the app when the DOM is fully loaded
-document.addEventListener("DOMContentLoaded", init)
+document.addEventListener("DOMContentLoaded", () => {
+  // Set today's date in the subtitle
+  const today = new Date();
+  const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const dateEl = document.getElementById('today-date');
+  if (dateEl) dateEl.textContent = dateStr;
+  init();
+});
 
 // Handle errors gracefully
 window.addEventListener("error", (event) => {

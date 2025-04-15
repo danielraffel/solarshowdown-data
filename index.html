@@ -13,8 +13,9 @@
   <div class="container">
     <header>
       <h1>🌞 Solar Showdown</h1>
-      <p class="subtitle">The ultimate energy face-off between Daniel and Steve</p>
+      <p class="subtitle">The ultimate energy face-off between Daniel and Steve — <span id="today-date"></span></p>
       
+      <!--
       <div class="view-controls">
         <label for="timeframe">Timeframe:</label>
         <select id="timeframe" class="timeframe-select">
@@ -32,6 +33,7 @@
           </label>
         </div>
       </div>
+      -->
     </header>
 
     <main>
@@ -63,6 +65,21 @@
               <div class="stat-value" id="daniel-sold">0 kWh</div>
               <div class="stat-badge" id="daniel-sold-badge"></div>
             </div>
+            <div class="stat-item">
+              <div class="stat-label">Imported</div>
+              <div class="stat-value" id="daniel-imported">0 kWh</div>
+              <div class="stat-badge" id="daniel-imported-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Discharged</div>
+              <div class="stat-value" id="daniel-discharged">0 kWh</div>
+              <div class="stat-badge" id="daniel-discharged-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Max PV</div>
+              <div class="stat-value" id="daniel-maxpv">0 kW</div>
+              <div class="stat-badge" id="daniel-maxpv-badge"></div>
+            </div>
             <div class="stat-item net-score">
               <div class="stat-label">Net Score</div>
               <div class="stat-value" id="daniel-net">0 kWh</div>
@@ -91,6 +108,21 @@
               <div class="stat-value" id="steve-sold">0 kWh</div>
               <div class="stat-badge" id="steve-sold-badge"></div>
             </div>
+            <div class="stat-item">
+              <div class="stat-label">Imported</div>
+              <div class="stat-value" id="steve-imported">0 kWh</div>
+              <div class="stat-badge" id="steve-imported-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Discharged</div>
+              <div class="stat-value" id="steve-discharged">0 kWh</div>
+              <div class="stat-badge" id="steve-discharged-badge"></div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Max PV</div>
+              <div class="stat-value" id="steve-maxpv">0 kW</div>
+              <div class="stat-badge" id="steve-maxpv-badge"></div>
+            </div>
             <div class="stat-item net-score">
               <div class="stat-label">Net Score</div>
               <div class="stat-value" id="steve-net">0 kWh</div>
@@ -115,9 +147,18 @@
             <div class="bonus-title">🧛 Energy Vampire</div>
             <div class="bonus-winner" id="energy-vampire">-</div>
           </div>
+          <div class="bonus-item">
+            <div class="bonus-title">🔋 Battery Boss</div>
+            <div class="bonus-winner" id="battery-boss">-</div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-title">⚡ Peak Performer</div>
+            <div class="bonus-winner" id="peak-performer">-</div>
+          </div>
         </div>
       </div>
 
+      <!--
       <div class="ev-charging" id="ev-charging">
         <h3>🚗 EV Charging Efficiency</h3>
         <div class="ev-grid">
@@ -171,6 +212,7 @@
           <p>This metric rewards both efficiency (miles per kWh) and solar usage (higher solar percentage).</p>
         </div>
       </div>
+      -->
     </main>
 
     <footer>
