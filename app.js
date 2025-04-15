@@ -219,7 +219,7 @@ const roastMessages = {
   ],
 }
 
-// Add this near the other DOM element queries
+// At the top with other DOM queries
 const roastModeToggle = document.getElementById("roast-mode")
 
 // Initialize the application
