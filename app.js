@@ -244,58 +244,70 @@ async function fetchAndUpdateData() {
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
+      console.log('Fetching from URLs:', { daniel: DANIEL_DATA_URL, steve: STEVE_DATA_URL })
       // Fetch real data from GitHub
-      const [danielResponse, steveResponse] = await Promise.all([
-        fetch(DANIEL_DATA_URL),
-        fetch(STEVE_DATA_URL)
-      ])
-
-      if (!danielResponse.ok || !steveResponse.ok) {
-        throw new Error('Failed to fetch data from GitHub')
-      }
-
-      let danielData = {}
-      let steveData = {}
       try {
-        danielData = await danielResponse.json()
-      } catch (e) {
-        console.error('Error parsing Daniel data:', e)
-        danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
-      }
-      try {
-        steveData = await steveResponse.json()
-      } catch (e) {
-        console.error('Error parsing Steve data:', e)
-        steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
-      }
+        const [danielResponse, steveResponse] = await Promise.all([
+          fetch(DANIEL_DATA_URL),
+          fetch(STEVE_DATA_URL)
+        ])
 
-      data = {
-        daniel: {
-          generated: danielData.generated ?? 0,
-          consumed: danielData.consumed ?? 0,
-          soldBack: danielData.exported ?? 0,
-          imported: danielData.imported ?? 0,
-          discharged: danielData.discharged ?? 0,
-          maxPv: danielData.maxPv ?? 0
-        },
-        steve: {
-          generated: steveData.generated ?? 0,
-          consumed: steveData.consumed ?? 0,
-          soldBack: steveData.exported ?? 0,
-          imported: steveData.imported ?? 0,
-          discharged: steveData.discharged ?? 0,
-          maxPv: steveData.maxPv ?? 0
+        console.log('Fetch responses:', {
+          daniel: { ok: danielResponse.ok, status: danielResponse.status },
+          steve: { ok: steveResponse.ok, status: steveResponse.status }
+        })
+
+        if (!danielResponse.ok || !steveResponse.ok) {
+          throw new Error(`Failed to fetch data: Daniel (${danielResponse.status}), Steve (${steveResponse.status})`)
         }
+
+        let danielData = {}
+        let steveData = {}
+        try {
+          danielData = await danielResponse.json()
+          console.log('Daniel data:', danielData)
+        } catch (e) {
+          console.error('Error parsing Daniel JSON:', e)
+          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+        }
+        try {
+          steveData = await steveResponse.json()
+          console.log('Steve data:', steveData)
+        } catch (e) {
+          console.error('Error parsing Steve JSON:', e)
+          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 }
+        }
+
+        data = {
+          daniel: {
+            generated: danielData.generated ?? 0,
+            consumed: danielData.consumed ?? 0,
+            soldBack: danielData.exported ?? 0,
+            imported: danielData.imported ?? 0,
+            discharged: danielData.discharged ?? 0,
+            maxPv: danielData.maxPv ?? 0
+          },
+          steve: {
+            generated: steveData.generated ?? 0,
+            consumed: steveData.consumed ?? 0,
+            soldBack: steveData.exported ?? 0,
+            imported: steveData.imported ?? 0,
+            discharged: steveData.discharged ?? 0,
+            maxPv: steveData.maxPv ?? 0
+          }
+        }
+      } catch (fetchError) {
+        console.error('Network or parsing error:', fetchError)
+        throw fetchError
       }
     }
 
-    console.log('Fetched data:', data)
+    console.log('Final data to update:', data)
     updateStats(data)
     loadingIndicator.style.display = "none"
     statsContainer.style.opacity = "1"
-    updateRoastMessages(data)
   } catch (error) {
-    console.error('Error fetching data:', error)
+    console.error('Error in fetchAndUpdateData:', error)
     loadingIndicator.style.display = "none"
     errorMessage.style.display = "block"
     statsContainer.style.opacity = "0.5"
@@ -308,57 +320,47 @@ function updateStats(data) {
     console.warn('Missing data for updateStats:', data)
     return
   }
+  
+  console.log('Updating stats with data:', data) // Debug log
+  
   // Calculate net scores
   const danielNet = calculateNetScore(data.daniel)
   const steveNet = calculateNetScore(data.steve)
 
   // Update display values with null checks
   if (danielGeneratedEl) danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
-  else console.warn('danielGeneratedEl missing')
   if (danielConsumedEl) danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
-  else console.warn('danielConsumedEl missing')
   if (danielSoldEl) danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
-  else console.warn('danielSoldEl missing')
   if (danielNetEl) danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
-  else console.warn('danielNetEl missing')
+  
   const danielImportedEl = document.getElementById("daniel-imported")
   if (danielImportedEl) danielImportedEl.textContent = `${data.daniel.imported.toFixed(1)} kWh`
-  else console.warn('danielImportedEl missing')
+  
   const danielDischargedEl = document.getElementById("daniel-discharged")
   if (danielDischargedEl) danielDischargedEl.textContent = `${data.daniel.discharged.toFixed(1)} kWh`
-  else console.warn('danielDischargedEl missing')
+  
   const danielMaxpvEl = document.getElementById("daniel-maxpv")
   if (danielMaxpvEl) danielMaxpvEl.textContent = `${data.daniel.maxPv.toFixed(1)} kW`
-  else console.warn('danielMaxpvEl missing')
 
   if (steveGeneratedEl) steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
-  else console.warn('steveGeneratedEl missing')
   if (steveConsumedEl) steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
-  else console.warn('steveConsumedEl missing')
   if (steveSoldEl) steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
-  else console.warn('steveSoldEl missing')
   if (steveNetEl) steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
-  else console.warn('steveNetEl missing')
+  
   const steveImportedEl = document.getElementById("steve-imported")
   if (steveImportedEl) steveImportedEl.textContent = `${data.steve.imported.toFixed(1)} kWh`
-  else console.warn('steveImportedEl missing')
+  
   const steveDischargedEl = document.getElementById("steve-discharged")
   if (steveDischargedEl) steveDischargedEl.textContent = `${data.steve.discharged.toFixed(1)} kWh`
-  else console.warn('steveDischargedEl missing')
+  
   const steveMaxpvEl = document.getElementById("steve-maxpv")
   if (steveMaxpvEl) steveMaxpvEl.textContent = `${data.steve.maxPv.toFixed(1)} kW`
-  else console.warn('steveMaxpvEl missing')
 
   // Determine winner
   determineWinner(danielNet, steveNet)
 
   // Update bonus categories
   updateBonusCategories(data)
-
-  // Update roast messages if enabled
-  // if (roastModeToggle.checked) {
-  //   updateRoastMessages(data)
-  // }
 
   // Update badges
   updateBadges(data)
@@ -563,12 +565,14 @@ function simulateNetworkDelay(ms) {
 // Initialize the app when the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
   // Set today's date in the subtitle
-  const today = new Date();
-  const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-  const dateEl = document.getElementById('today-date');
-  if (dateEl) dateEl.textContent = dateStr;
-  init();
-});
+  const today = new Date()
+  const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  const dateEl = document.getElementById('today-date')
+  if (dateEl) dateEl.textContent = dateStr
+  
+  // Start fetching data
+  fetchAndUpdateData()
+})
 
 // Handle errors gracefully
 window.addEventListener("error", (event) => {
