@@ -1,11 +1,11 @@
 // Solar Showdown - Main Application Logic
-console.log('App.js loaded - v2.2 - Using generouscorp URLs')
+console.log('App.js loaded - v2.3 - Using GitHub raw URLs')
 
+// Configuration
+const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/daniel.json"
+const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/steve.json"
 // Use a CORS proxy to avoid cross-origin issues
-const CORS_PROXY = "https://corsproxy.io/?" // Re-enable CORS proxy
-// Data URLs
-const DANIEL_DATA_URL = `${CORS_PROXY}https://www.generouscorp.com/solarshowdown-data/daniel.json`
-const STEVE_DATA_URL = `${CORS_PROXY}https://www.generouscorp.com/solarshowdown-data/steve.json`
+const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
 
@@ -119,6 +119,7 @@ const mockData = {
 
 // Initialize the application
 function init() {
+  // Initial data fetch
   fetchAndUpdateData()
 }
 
@@ -135,163 +136,58 @@ async function fetchAndUpdateData() {
     let data
 
     if (MOCK_MODE) {
-      console.log('Using mock data')
+      // Use mock data for development
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
-      console.log('Starting fetch from:', { 
-        danielUrl: DANIEL_DATA_URL, 
-        steveUrl: STEVE_DATA_URL,
-        absolute: {
-          daniel: new URL(DANIEL_DATA_URL, window.location.href).href,
-          steve: new URL(STEVE_DATA_URL, window.location.href).href
-        }
-      })
+      console.log('Fetching data from GitHub...')
+      // Fetch real data from GitHub
+      const danielResponse = await fetch(CORS_PROXY + DANIEL_DATA_URL)
+      const steveResponse = await fetch(CORS_PROXY + STEVE_DATA_URL)
       
-      // Fetch real data
-      try {
-        const [danielResponse, steveResponse] = await Promise.all([
-          fetch(DANIEL_DATA_URL),
-          fetch(STEVE_DATA_URL)
-        ])
-
-        console.log('Fetch responses:', {
-          daniel: { 
-            ok: danielResponse.ok, 
-            status: danielResponse.status,
-            statusText: danielResponse.statusText,
-          },
-          steve: { 
-            ok: steveResponse.ok, 
-            status: steveResponse.status,
-            statusText: steveResponse.statusText
-          }
-        })
-
-        if (!danielResponse.ok) {
-          throw new Error(`Failed to fetch Daniel data: ${danielResponse.status} ${danielResponse.statusText}`)
-        }
-        
-        if (!steveResponse.ok) {
-          throw new Error(`Failed to fetch Steve data: ${steveResponse.status} ${steveResponse.statusText}`)
-        }
-
-        let danielData = {}
-        let steveData = {}
-        
-        // First get the raw text to debug JSON format
-        try {
-          const danielText = await danielResponse.text();
-          console.log('Daniel JSON text:', danielText);
-          
-          try {
-            danielData = JSON.parse(danielText);
-            console.log('Daniel data parsed:', danielData);
-          } catch (e) {
-            console.error('Error parsing Daniel JSON:', e, 'Raw text was:', danielText);
-            danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
-          }
-        } catch (e) {
-          console.error('Error getting Daniel text:', e);
-          danielData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
-        }
-        
-        try {
-          const steveText = await steveResponse.text();
-          console.log('Steve JSON text:', steveText);
-          
-          try {
-            steveData = JSON.parse(steveText);
-            console.log('Steve data parsed:', steveData);
-          } catch (e) {
-            console.error('Error parsing Steve JSON:', e, 'Raw text was:', steveText);
-            steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
-          }
-        } catch (e) {
-          console.error('Error getting Steve text:', e);
-          steveData = { generated: 0, consumed: 0, exported: 0, imported: 0, discharged: 0, maxPv: 0 };
-        }
-
-        data = {
-          daniel: {
-            generated: danielData.generated ?? 0,
-            consumed: danielData.consumed ?? 0,
-            soldBack: danielData.exported ?? 0,
-            imported: danielData.imported ?? 0,
-            discharged: danielData.discharged ?? 0,
-            maxPv: danielData.maxPv ?? 0
-          },
-          steve: {
-            generated: steveData.generated ?? 0,
-            consumed: steveData.consumed ?? 0,
-            soldBack: steveData.exported ?? 0,
-            imported: steveData.imported ?? 0,
-            discharged: steveData.discharged ?? 0,
-            maxPv: steveData.maxPv ?? 0
-          }
-        }
-        
-        console.log('Processed data:', {
-          daniel: {
-            original: danielData,
-            processed: data.daniel
-          },
-          steve: {
-            original: steveData,
-            processed: data.steve
-          }
-        });
-        
-        // Check if we actually got meaningful data
-        const gotActualData = (
-          data.daniel.generated > 0 || 
-          data.steve.generated > 0
-        );
-        
-        console.log('Got actual data:', gotActualData);
-        
-        if (!gotActualData) {
-          console.warn('No meaningful data values were found!');
-        }
-      } catch (fetchError) {
-        console.error('Network or parsing error:', fetchError)
-        throw fetchError
+      if (!danielResponse.ok || !steveResponse.ok) {
+        throw new Error("Failed to fetch data from GitHub")
       }
+      
+      const danielData = await danielResponse.json()
+      const steveData = await steveResponse.json()
+      
+      console.log('Raw data:', { danielData, steveData })
+      
+      data = {
+        daniel: {
+          generated: danielData.generated || 0,
+          consumed: danielData.consumed || 0,
+          soldBack: danielData.exported || 0,
+          imported: danielData.imported || 0,
+          discharged: danielData.discharged || 0,
+          maxPv: danielData.maxPv || 0
+        },
+        steve: {
+          generated: steveData.generated || 0,
+          consumed: steveData.consumed || 0,
+          soldBack: steveData.exported || 0,
+          imported: steveData.imported || 0,
+          discharged: steveData.discharged || 0,
+          maxPv: steveData.maxPv || 0
+        }
+      }
+      
+      console.log('Processed data:', data)
     }
 
-    console.log('Final data to update:', data)
+    // Update the UI with the fetched data
     updateStats(data)
+
+    // Hide loading state
     loadingIndicator.style.display = "none"
     statsContainer.style.opacity = "1"
   } catch (error) {
-    console.error('Error in fetchAndUpdateData:', error)
+    console.error("Error fetching data:", error)
+    // Show error message
     loadingIndicator.style.display = "none"
     errorMessage.style.display = "block"
     statsContainer.style.opacity = "0.5"
-    
-    // Update error message with more details
-    const errorDetails = document.createElement('p');
-    errorDetails.textContent = `Error: ${error.message}`;
-    errorDetails.style.fontFamily = 'monospace';
-    errorDetails.style.fontSize = '12px';
-    errorDetails.style.marginTop = '10px';
-    errorMessage.appendChild(errorDetails);
-    
-    // Add a retry button
-    const retryButton = document.createElement('button');
-    retryButton.textContent = 'Try Again';
-    retryButton.style.marginTop = '15px';
-    retryButton.style.padding = '8px 16px';
-    retryButton.style.cursor = 'pointer';
-    retryButton.onclick = () => {
-      // Clear error message children first
-      while (errorMessage.childNodes.length > 1) {
-        errorMessage.removeChild(errorMessage.lastChild);
-      }
-      // Try fetching again
-      fetchAndUpdateData();
-    };
-    errorMessage.appendChild(retryButton);
   }
 }
 
@@ -301,19 +197,17 @@ function updateStats(data) {
     console.warn('Missing data for updateStats:', data)
     return
   }
-  
-  console.log('Updating stats with data:', data)
-  
+
   // Calculate net scores
   const danielNet = calculateNetScore(data.daniel)
   const steveNet = calculateNetScore(data.steve)
 
-  // Update display values with null checks
-  if (danielGeneratedEl) danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
-  if (danielConsumedEl) danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
-  if (danielSoldEl) danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
-  if (danielNetEl) danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
-  
+  // Update display values
+  danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
+  danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
+  danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
+  danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
+
   const danielImportedEl = document.getElementById("daniel-imported")
   if (danielImportedEl) danielImportedEl.textContent = `${data.daniel.imported.toFixed(1)} kWh`
   
@@ -323,11 +217,11 @@ function updateStats(data) {
   const danielMaxpvEl = document.getElementById("daniel-maxpv")
   if (danielMaxpvEl) danielMaxpvEl.textContent = `${data.daniel.maxPv.toFixed(1)} kW`
 
-  if (steveGeneratedEl) steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
-  if (steveConsumedEl) steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
-  if (steveSoldEl) steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
-  if (steveNetEl) steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
-  
+  steveGeneratedEl.textContent = `${data.steve.generated.toFixed(1)} kWh`
+  steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
+  steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
+  steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
+
   const steveImportedEl = document.getElementById("steve-imported")
   if (steveImportedEl) steveImportedEl.textContent = `${data.steve.imported.toFixed(1)} kWh`
   
@@ -378,23 +272,23 @@ function determineWinner(danielNet, steveNet) {
 // Update bonus categories
 function updateBonusCategories(data) {
   // Solar MVP
-  document.getElementById('solar-mvp').textContent = 
+  solarMvpEl.textContent = 
     data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'
     
   // Grid Hustler
-  document.getElementById('grid-hustler').textContent = 
+  gridHustlerEl.textContent = 
     data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve'
     
   // Energy Vampire
-  document.getElementById('energy-vampire').textContent = 
+  energyVampireEl.textContent = 
     data.daniel.consumed > data.steve.consumed ? 'Daniel' : 'Steve'
     
   // Battery Boss
-  document.getElementById('battery-boss').textContent = 
+  batteryBossEl.textContent = 
     data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve'
     
   // Peak Performer
-  document.getElementById('peak-performer').textContent = 
+  peakPerformerEl.textContent = 
     data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve'
 }
 
@@ -407,6 +301,7 @@ function updateBadges(data) {
   steveGeneratedBadge.style.display = "none"
   steveConsumedBadge.style.display = "none"
   steveSoldBadge.style.display = "none"
+
   // New fields
   const danielImportedBadge = document.getElementById("daniel-imported-badge")
   const steveImportedBadge = document.getElementById("steve-imported-badge")
@@ -414,12 +309,13 @@ function updateBadges(data) {
   const steveDischargedBadge = document.getElementById("steve-discharged-badge")
   const danielMaxpvBadge = document.getElementById("daniel-maxpv-badge")
   const steveMaxpvBadge = document.getElementById("steve-maxpv-badge")
-  danielImportedBadge.style.display = "none"
-  steveImportedBadge.style.display = "none"
-  danielDischargedBadge.style.display = "none"
-  steveDischargedBadge.style.display = "none"
-  danielMaxpvBadge.style.display = "none"
-  steveMaxpvBadge.style.display = "none"
+  
+  if (danielImportedBadge) danielImportedBadge.style.display = "none"
+  if (steveImportedBadge) steveImportedBadge.style.display = "none"
+  if (danielDischargedBadge) danielDischargedBadge.style.display = "none"
+  if (steveDischargedBadge) steveDischargedBadge.style.display = "none"
+  if (danielMaxpvBadge) danielMaxpvBadge.style.display = "none"
+  if (steveMaxpvBadge) steveMaxpvBadge.style.display = "none"
 
   // Set badges for generated
   if (data.daniel.generated > data.steve.generated) {
@@ -429,6 +325,7 @@ function updateBadges(data) {
     steveGeneratedBadge.textContent = "🌟"
     steveGeneratedBadge.style.display = "block"
   }
+
   // Sold back
   if (data.daniel.soldBack > data.steve.soldBack) {
     danielSoldBadge.textContent = "💰"
@@ -437,6 +334,7 @@ function updateBadges(data) {
     steveSoldBadge.textContent = "💰"
     steveSoldBadge.style.display = "block"
   }
+
   // Consumed (lower is better)
   if (data.daniel.consumed < data.steve.consumed) {
     danielConsumedBadge.textContent = "🌱"
@@ -445,44 +343,53 @@ function updateBadges(data) {
     steveConsumedBadge.textContent = "🌱"
     steveConsumedBadge.style.display = "block"
   }
+
   // Imported (lower is better)
-  if (data.daniel.imported < data.steve.imported) {
-    danielImportedBadge.textContent = "🔌"
-    danielImportedBadge.style.display = "block"
-  } else if (data.steve.imported < data.daniel.imported) {
-    steveImportedBadge.textContent = "🔌"
-    steveImportedBadge.style.display = "block"
-  } else if (data.daniel.imported === data.steve.imported) {
-    danielImportedBadge.textContent = "🤝"
-    steveImportedBadge.textContent = "🤝"
-    danielImportedBadge.style.display = "block"
-    steveImportedBadge.style.display = "block"
+  if (danielImportedBadge && steveImportedBadge) {
+    if (data.daniel.imported < data.steve.imported) {
+      danielImportedBadge.textContent = "🔌"
+      danielImportedBadge.style.display = "block"
+    } else if (data.steve.imported < data.daniel.imported) {
+      steveImportedBadge.textContent = "🔌"
+      steveImportedBadge.style.display = "block"
+    } else if (data.daniel.imported === data.steve.imported) {
+      danielImportedBadge.textContent = "🤝"
+      steveImportedBadge.textContent = "🤝"
+      danielImportedBadge.style.display = "block"
+      steveImportedBadge.style.display = "block"
+    }
   }
+
   // Discharged (lower is better)
-  if (data.daniel.discharged < data.steve.discharged) {
-    danielDischargedBadge.textContent = "🪫"
-    danielDischargedBadge.style.display = "block"
-  } else if (data.steve.discharged < data.daniel.discharged) {
-    steveDischargedBadge.textContent = "🪫"
-    steveDischargedBadge.style.display = "block"
-  } else if (data.daniel.discharged === data.steve.discharged) {
-    danielDischargedBadge.textContent = "🤝"
-    steveDischargedBadge.textContent = "🤝"
-    danielDischargedBadge.style.display = "block"
-    steveDischargedBadge.style.display = "block"
+  if (danielDischargedBadge && steveDischargedBadge) {
+    if (data.daniel.discharged < data.steve.discharged) {
+      danielDischargedBadge.textContent = "🪫"
+      danielDischargedBadge.style.display = "block"
+    } else if (data.steve.discharged < data.daniel.discharged) {
+      steveDischargedBadge.textContent = "🪫"
+      steveDischargedBadge.style.display = "block"
+    } else if (data.daniel.discharged === data.steve.discharged) {
+      danielDischargedBadge.textContent = "🤝"
+      steveDischargedBadge.textContent = "🤝"
+      danielDischargedBadge.style.display = "block"
+      steveDischargedBadge.style.display = "block"
+    }
   }
+
   // Max PV (higher is better)
-  if (data.daniel.maxPv > data.steve.maxPv) {
-    danielMaxpvBadge.textContent = "☀️"
-    danielMaxpvBadge.style.display = "block"
-  } else if (data.steve.maxPv > data.daniel.maxPv) {
-    steveMaxpvBadge.textContent = "☀️"
-    steveMaxpvBadge.style.display = "block"
-  } else if (data.daniel.maxPv === data.steve.maxPv) {
-    danielMaxpvBadge.textContent = "🤝"
-    steveMaxpvBadge.textContent = "🤝"
-    danielMaxpvBadge.style.display = "block"
-    steveMaxpvBadge.style.display = "block"
+  if (danielMaxpvBadge && steveMaxpvBadge) {
+    if (data.daniel.maxPv > data.steve.maxPv) {
+      danielMaxpvBadge.textContent = "☀️"
+      danielMaxpvBadge.style.display = "block"
+    } else if (data.steve.maxPv > data.daniel.maxPv) {
+      steveMaxpvBadge.textContent = "☀️"
+      steveMaxpvBadge.style.display = "block"
+    } else if (data.daniel.maxPv === data.steve.maxPv) {
+      danielMaxpvBadge.textContent = "🤝"
+      steveMaxpvBadge.textContent = "🤝"
+      danielMaxpvBadge.style.display = "block"
+      steveMaxpvBadge.style.display = "block"
+    }
   }
 }
 
@@ -492,16 +399,7 @@ function simulateNetworkDelay(ms) {
 }
 
 // Initialize the app when the DOM is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
-  // Set today's date in the subtitle
-  const today = new Date()
-  const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-  const dateEl = document.getElementById('today-date')
-  if (dateEl) dateEl.textContent = dateStr
-  
-  // Start fetching data
-  fetchAndUpdateData()
-})
+document.addEventListener("DOMContentLoaded", init)
 
 // Handle errors gracefully
 window.addEventListener("error", (event) => {
@@ -509,4 +407,64 @@ window.addEventListener("error", (event) => {
   errorMessage.style.display = "block"
   loadingIndicator.style.display = "none"
 })
+
+// Add test function at the bottom of the file
+async function testDataProcessing() {
+  console.log('Testing data processing...')
+  
+  // Test with known good data
+  const testData = {
+    daniel: {
+      generated: 29.899999618530273,
+      consumed: 26.799999237060547,
+      exported: 0.10000000149011612,
+      imported: 0.10000000149011612,
+      discharged: 8,
+      maxPv: 11.567
+    },
+    steve: {
+      generated: 33.09999990463257,
+      consumed: 10.40000019222498,
+      exported: 19.399999618530273,
+      imported: 0.10000000149011612,
+      discharged: 4.099999904632568,
+      maxPv: 9.97
+    }
+  }
+  
+  console.log('Test data:', testData)
+  
+  try {
+    // Process the data like we would from fetch
+    const processedData = {
+      daniel: {
+        generated: testData.daniel.generated ?? 0,
+        consumed: testData.daniel.consumed ?? 0,
+        soldBack: testData.daniel.exported ?? 0,
+        imported: testData.daniel.imported ?? 0,
+        discharged: testData.daniel.discharged ?? 0,
+        maxPv: testData.daniel.maxPv ?? 0
+      },
+      steve: {
+        generated: testData.steve.generated ?? 0,
+        consumed: testData.steve.consumed ?? 0,
+        soldBack: testData.steve.exported ?? 0,
+        imported: testData.steve.imported ?? 0,
+        discharged: testData.steve.discharged ?? 0,
+        maxPv: testData.steve.maxPv ?? 0
+      }
+    }
+    
+    console.log('Processed test data:', processedData)
+    
+    // Try updating the UI
+    updateStats(processedData)
+    console.log('UI update complete')
+  } catch (error) {
+    console.error('Test failed:', error)
+  }
+}
+
+// Call test after a delay to let page load
+setTimeout(testDataProcessing, 2000)
 
