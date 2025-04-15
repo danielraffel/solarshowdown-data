@@ -1,11 +1,11 @@
 // Solar Showdown - Main Application Logic
-console.log('App.js loaded - v2.1 - Fixed data source')
+console.log('App.js loaded - v2.2 - Using generouscorp URLs')
 
 // Use a CORS proxy to avoid cross-origin issues
-const CORS_PROXY = "" // Remove CORS proxy since we're serving from same domain
+const CORS_PROXY = "https://corsproxy.io/?" // Re-enable CORS proxy
 // Data URLs
-const DANIEL_DATA_URL = `daniel.json` // Local file path
-const STEVE_DATA_URL = `steve.json` // Local file path
+const DANIEL_DATA_URL = `${CORS_PROXY}https://www.generouscorp.com/solarshowdown-data/daniel.json`
+const STEVE_DATA_URL = `${CORS_PROXY}https://www.generouscorp.com/solarshowdown-data/steve.json`
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
 
@@ -230,6 +230,29 @@ async function fetchAndUpdateData() {
             maxPv: steveData.maxPv ?? 0
           }
         }
+        
+        console.log('Processed data:', {
+          daniel: {
+            original: danielData,
+            processed: data.daniel
+          },
+          steve: {
+            original: steveData,
+            processed: data.steve
+          }
+        });
+        
+        // Check if we actually got meaningful data
+        const gotActualData = (
+          data.daniel.generated > 0 || 
+          data.steve.generated > 0
+        );
+        
+        console.log('Got actual data:', gotActualData);
+        
+        if (!gotActualData) {
+          console.warn('No meaningful data values were found!');
+        }
       } catch (fetchError) {
         console.error('Network or parsing error:', fetchError)
         throw fetchError
@@ -245,6 +268,30 @@ async function fetchAndUpdateData() {
     loadingIndicator.style.display = "none"
     errorMessage.style.display = "block"
     statsContainer.style.opacity = "0.5"
+    
+    // Update error message with more details
+    const errorDetails = document.createElement('p');
+    errorDetails.textContent = `Error: ${error.message}`;
+    errorDetails.style.fontFamily = 'monospace';
+    errorDetails.style.fontSize = '12px';
+    errorDetails.style.marginTop = '10px';
+    errorMessage.appendChild(errorDetails);
+    
+    // Add a retry button
+    const retryButton = document.createElement('button');
+    retryButton.textContent = 'Try Again';
+    retryButton.style.marginTop = '15px';
+    retryButton.style.padding = '8px 16px';
+    retryButton.style.cursor = 'pointer';
+    retryButton.onclick = () => {
+      // Clear error message children first
+      while (errorMessage.childNodes.length > 1) {
+        errorMessage.removeChild(errorMessage.lastChild);
+      }
+      // Try fetching again
+      fetchAndUpdateData();
+    };
+    errorMessage.appendChild(retryButton);
   }
 }
 
