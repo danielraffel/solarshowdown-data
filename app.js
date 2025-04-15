@@ -574,3 +574,16 @@ window.addEventListener("error", (event) => {
   loadingIndicator.style.display = "none"
 })
 
+// Add event listener to update roast messages when the toggle changes
+if (typeof roastModeToggle !== 'undefined' && roastModeToggle) {
+  roastModeToggle.addEventListener("change", function () {
+    if (this.checked) {
+      updateRoastMessages()
+    } else {
+      // Hide roast messages when toggle is turned off
+      danielRoastEl.style.display = "none"
+      steveRoastEl.style.display = "none"
+    }
+  })
+}
+
