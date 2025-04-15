@@ -244,20 +244,20 @@ async function fetchAndUpdateData() {
 
       data = {
         daniel: {
-          generated: danielData.generated || 0,
-          consumed: danielData.consumed || 0,
-          soldBack: danielData.exported || 0,
-          imported: danielData.imported || 0,
-          discharged: danielData.discharged || 0,
-          maxPv: danielData.maxPv || 0
+          generated: danielData.generated ?? 0,
+          consumed: danielData.consumed ?? 0,
+          soldBack: danielData.exported ?? 0,
+          imported: danielData.imported ?? 0,
+          discharged: danielData.discharged ?? 0,
+          maxPv: danielData.maxPv ?? 0
         },
         steve: {
-          generated: steveData.generated || 0,
-          consumed: steveData.consumed || 0,
-          soldBack: steveData.exported || 0,
-          imported: steveData.imported || 0,
-          discharged: steveData.discharged || 0,
-          maxPv: steveData.maxPv || 0
+          generated: steveData.generated ?? 0,
+          consumed: steveData.consumed ?? 0,
+          soldBack: steveData.exported ?? 0,
+          imported: steveData.imported ?? 0,
+          discharged: steveData.discharged ?? 0,
+          maxPv: steveData.maxPv ?? 0
         }
       }
     }
