@@ -15,6 +15,7 @@ const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds
 const loadingIndicator = document.getElementById("loading")
 const errorMessage = document.getElementById("error-message")
 const statsContainer = document.getElementById("stats-container")
+const highScoresEl = document.getElementById("high-scores")
 
 // Daniel elements
 const danielGeneratedEl = document.getElementById("daniel-generated")
@@ -274,6 +275,9 @@ function updateStats(data) {
   // Calculate net scores
   const danielNet = calculateNetScore(data.daniel)
   const steveNet = calculateNetScore(data.steve)
+
+  // Update high scores summary first
+  updateHighScores(data, danielNet, steveNet)
 
   // Update display values
   danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
@@ -540,4 +544,44 @@ async function testDataProcessing() {
 
 // Call test after a delay to let page load
 setTimeout(testDataProcessing, 2000)
+
+// Add new function for high scores summary
+function updateHighScores(data, danielNet, steveNet) {
+  // Clear previous content
+  highScoresEl.innerHTML = '';
+  
+  const stats = []
+  
+  // Net Score Winner (👑)
+  const netWinner = danielNet > steveNet ? 'D' : 'S'
+  const netScore = danielNet > steveNet ? danielNet : steveNet
+  stats.push(`<span>Today's Champion: 👑 ${netWinner}</span>`)
+  
+  // Generation (🌟)
+  const genWinner = data.daniel.generated > data.steve.generated ? 'D' : 'S'
+  const genValue = Math.max(data.daniel.generated, data.steve.generated)
+  stats.push(`<span>🌟 Gen: ${genValue.toFixed(1)} ${genWinner}</span>`)
+  
+  // Consumption (🌱) - lower is better
+  const conWinner = data.daniel.consumed < data.steve.consumed ? 'D' : 'S'
+  const conValue = Math.min(data.daniel.consumed, data.steve.consumed)
+  stats.push(`<span>🌱 Con: ${conValue.toFixed(1)} ${conWinner}</span>`)
+  
+  // Grid Export (💰)
+  const soldWinner = data.daniel.soldBack > data.steve.soldBack ? 'D' : 'S'
+  const soldValue = Math.max(data.daniel.soldBack, data.steve.soldBack)
+  stats.push(`<span>💰 Sold: ${soldValue.toFixed(1)} ${soldWinner}</span>`)
+  
+  // Grid Import (🔌) - lower is better
+  const gridWinner = data.daniel.imported < data.steve.imported ? 'D' : 'S'
+  const gridValue = Math.min(data.daniel.imported, data.steve.imported)
+  stats.push(`<span>🔌 Grid: ${gridValue.toFixed(1)} ${gridWinner}</span>`)
+  
+  // Peak Power (⚡)
+  const peakWinner = data.daniel.maxPv > data.steve.maxPv ? 'D' : 'S'
+  const peakValue = Math.max(data.daniel.maxPv, data.steve.maxPv)
+  stats.push(`<span>⚡ MaxPV: ${peakValue.toFixed(1)} ${peakWinner}</span>`)
+  
+  highScoresEl.innerHTML = stats.join(' ')
+}
 
