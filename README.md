@@ -6,14 +6,14 @@ A daily competition tracking solar energy production and consumption between Dan
 
 Solar Showdown is a friendly competition dashboard that pits two solar power systems against each other, tracking various energy metrics including:
 
-- 🌟 Energy Generated
+- 🌟 Solar Energy Generated
 - 🌱 Energy Consumed
-- ⚡ Grid Sales (Energy sold back)
-- 🔌 Grid Imports
-- 🪫 Battery Discharge
-- ⚡ Peak Power
+- 💰 Energy Sold to Grid
+- 🔌 Energy Imported from Grid
+- 🪫 Battery Discharged
+- ⚡ Max PV from Solar Array
 
-Each day, a new champion is crowned based on their solar performance!
+Each day, a new champion is crowned based on who harvests the most solar energy and uses it most efficiently!
 
 ## 🏗️ Project Structure
 
@@ -28,7 +28,7 @@ Each day, a new champion is crowned based on their solar performance!
 - Multiple performance categories
 - Social media preview cards
 - Responsive design
-- Fun emoji indicators for achievements
+- Emoji indicators for achievements
 
 ## 🏆 Bonus Categories
 
@@ -45,7 +45,8 @@ Each day, a new champion is crowned based on their solar performance!
 - CSS3
 - Vanilla JavaScript
 - [solarshowdown-api](https://github.com/skrul/solarshowdown-api) for data fetching
-- InfluxDB for metrics storage
+- InfluxDB and Grafana for metrics storage
+- GitHub pages for hosting
 
 ## 📊 Data Updates
 
