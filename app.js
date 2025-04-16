@@ -129,6 +129,10 @@ if (todayDateEl) {
   todayDateEl.textContent = today.toLocaleDateString('en-US', options)
 }
 
+// Add at the top with other global variables
+let lastUpdateTimestamp = 0;
+let isFetchingData = false;
+
 // Initialize the application
 function init() {
   // Hide error message initially
@@ -139,8 +143,9 @@ function init() {
   const cachedData = localStorage.getItem(CACHE_KEY)
   if (cachedData) {
     try {
-      const { data } = JSON.parse(cachedData)
-      updateStats(data)
+      const { timestamp, data } = JSON.parse(cachedData)
+      console.log('Loading cached data with timestamp:', new Date(timestamp).toISOString())
+      updateStats(data, timestamp)
     } catch (e) {
       console.warn('Failed to parse cached data:', e)
     }
@@ -152,12 +157,21 @@ function init() {
 
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
+  // Prevent multiple concurrent fetches
+  if (isFetchingData) {
+    console.log('Fetch already in progress, skipping')
+    return
+  }
+
+  isFetchingData = true
   if (loadingIndicator) loadingIndicator.style.display = "flex"
   if (errorMessage) errorMessage.style.display = "none"
   if (statsContainer) statsContainer.style.opacity = "1"
 
   try {
     let data
+    const timestamp = Date.now()
+    console.log('Starting fresh data fetch at:', new Date(timestamp).toISOString())
 
     if (MOCK_MODE) {
       // Use mock data for development
@@ -199,12 +213,13 @@ async function fetchAndUpdateData() {
         }
       }
 
-      // Cache the fetched data
-      await cacheData(data)
+      console.log('Fetched fresh data:', data)
+      // Cache the fetched data with timestamp
+      await cacheData(data, timestamp)
     }
 
-    // Update the UI with the fetched data
-    updateStats(data)
+    // Update the UI with the fetched data and timestamp
+    updateStats(data, timestamp)
 
     // Hide loading state
     if (loadingIndicator) loadingIndicator.style.display = "none"
@@ -215,6 +230,8 @@ async function fetchAndUpdateData() {
     if (loadingIndicator) loadingIndicator.style.display = "none"
     if (errorMessage) errorMessage.style.display = "block"
     if (statsContainer) statsContainer.style.opacity = "0.5"
+  } finally {
+    isFetchingData = false
   }
 }
 
@@ -240,10 +257,10 @@ async function getCachedData() {
   }
 }
 
-async function cacheData(data) {
+async function cacheData(data, timestamp) {
   try {
     const cacheItem = {
-      timestamp: Date.now(),
+      timestamp,
       data
     }
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheItem))
@@ -253,10 +270,20 @@ async function cacheData(data) {
 }
 
 // Update the statistics display
-function updateStats(data) {
+function updateStats(data, timestamp = Date.now()) {
+  // Only update if this data is newer than our last update
+  if (timestamp <= lastUpdateTimestamp) {
+    console.log('Skipping update - current timestamp:', new Date(timestamp).toISOString(), 
+                'last update:', new Date(lastUpdateTimestamp).toISOString());
+    return;
+  }
+  
+  console.log('Updating stats with timestamp:', new Date(timestamp).toISOString());
+  lastUpdateTimestamp = timestamp;
+
   if (!data || !data.daniel || !data.steve) {
-    console.warn('Missing data for updateStats:', data)
-    return
+    console.warn('Missing data for updateStats:', data);
+    return;
   }
 
   // Calculate net scores
@@ -485,66 +512,6 @@ window.addEventListener("error", (event) => {
   errorMessage.style.display = "block"
   loadingIndicator.style.display = "none"
 })
-
-// Add test function at the bottom of the file
-async function testDataProcessing() {
-  console.log('Testing data processing...')
-  
-  // Test with known good data
-  const testData = {
-    daniel: {
-      generated: 29.899999618530273,
-      consumed: 26.799999237060547,
-      exported: 0.10000000149011612,
-      imported: 0.10000000149011612,
-      discharged: 8,
-      maxPv: 11.567
-    },
-    steve: {
-      generated: 33.09999990463257,
-      consumed: 10.40000019222498,
-      exported: 19.399999618530273,
-      imported: 0.10000000149011612,
-      discharged: 4.099999904632568,
-      maxPv: 9.97
-    }
-  }
-  
-  console.log('Test data:', testData)
-  
-  try {
-    // Process the data like we would from fetch
-    const processedData = {
-      daniel: {
-        generated: testData.daniel.generated ?? 0,
-        consumed: testData.daniel.consumed ?? 0,
-        soldBack: testData.daniel.exported ?? 0,
-        imported: testData.daniel.imported ?? 0,
-        discharged: testData.daniel.discharged ?? 0,
-        maxPv: testData.daniel.maxPv ?? 0
-      },
-      steve: {
-        generated: testData.steve.generated ?? 0,
-        consumed: testData.steve.consumed ?? 0,
-        soldBack: testData.steve.exported ?? 0,
-        imported: testData.steve.imported ?? 0,
-        discharged: testData.steve.discharged ?? 0,
-        maxPv: testData.steve.maxPv ?? 0
-      }
-    }
-    
-    console.log('Processed test data:', processedData)
-    
-    // Try updating the UI
-    updateStats(processedData)
-    console.log('UI update complete')
-  } catch (error) {
-    console.error('Test failed:', error)
-  }
-}
-
-// Call test after a delay to let page load
-setTimeout(testDataProcessing, 2000)
 
 // Add new function for high scores summary
 function updateHighScores(data) {
