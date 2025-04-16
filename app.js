@@ -333,8 +333,9 @@ function updateStats(data, timestamp = Date.now()) {
 
   // Update meta descriptions for social sharing
   const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  const title = `Solar Showdown - ${data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'} is the champion on ${dateStr}!`;
-  const description = `${data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'} generated ${Math.max(data.daniel.generated, data.steve.generated).toFixed(1)} kWh today`;
+  const champion = danielNet === steveNet ? 'Tied' : (danielNet > steveNet ? 'Daniel' : 'Steve');
+  const title = `Solar Showdown - ${champion}${champion === 'Tied' ? '!' : ' is the champion'} on ${dateStr}!`;
+  const description = `${champion}${champion === 'Tied' ? ' tied with' : ' leads with'} ${Math.max(danielNet, steveNet).toFixed(1)} net kWh today`;
   
   // Update all meta tags
   document.getElementById('page-title').textContent = title;
