@@ -423,28 +423,43 @@ function updateBadges(data) {
   if (steveMaxpvBadge) steveMaxpvBadge.style.display = "none"
 
   // Set badges for generated
-  if (data.daniel.generated > data.steve.generated) {
+  if (data.daniel.generated === data.steve.generated) {
+    danielGeneratedBadge.textContent = "🤝"
+    steveGeneratedBadge.textContent = "🤝"
+    danielGeneratedBadge.style.display = "block"
+    steveGeneratedBadge.style.display = "block"
+  } else if (data.daniel.generated > data.steve.generated) {
     danielGeneratedBadge.textContent = "🌟"
     danielGeneratedBadge.style.display = "block"
-  } else if (data.steve.generated > data.daniel.generated) {
+  } else {
     steveGeneratedBadge.textContent = "🌟"
     steveGeneratedBadge.style.display = "block"
   }
 
   // Sold back
-  if (data.daniel.soldBack > data.steve.soldBack) {
+  if (data.daniel.soldBack === data.steve.soldBack) {
+    danielSoldBadge.textContent = "🤝"
+    steveSoldBadge.textContent = "🤝"
+    danielSoldBadge.style.display = "block"
+    steveSoldBadge.style.display = "block"
+  } else if (data.daniel.soldBack > data.steve.soldBack) {
     danielSoldBadge.textContent = "💰"
     danielSoldBadge.style.display = "block"
-  } else if (data.steve.soldBack > data.daniel.soldBack) {
+  } else {
     steveSoldBadge.textContent = "💰"
     steveSoldBadge.style.display = "block"
   }
 
   // Consumed (lower is better)
-  if (data.daniel.consumed < data.steve.consumed) {
+  if (data.daniel.consumed === data.steve.consumed) {
+    danielConsumedBadge.textContent = "🤝"
+    steveConsumedBadge.textContent = "🤝"
+    danielConsumedBadge.style.display = "block"
+    steveConsumedBadge.style.display = "block"
+  } else if (data.daniel.consumed < data.steve.consumed) {
     danielConsumedBadge.textContent = "🌱"
     danielConsumedBadge.style.display = "block"
-  } else if (data.steve.consumed < data.daniel.consumed) {
+  } else {
     steveConsumedBadge.textContent = "🌱"
     steveConsumedBadge.style.display = "block"
   }
@@ -518,26 +533,26 @@ function updateHighScores(data) {
   const highScoresDiv = document.querySelector('.high-scores');
   highScoresDiv.innerHTML = '';
 
-  // Calculate winners
+  // Calculate winners with tie handling
   const danielNetScore = data.daniel.generated - data.daniel.consumed;
   const steveNetScore = data.steve.generated - data.steve.consumed;
-  const mvpWinner = danielNetScore > steveNetScore ? 'Daniel' : 'Steve';
+  const mvpWinner = danielNetScore === steveNetScore ? 'Tied' : (danielNetScore > steveNetScore ? 'Daniel' : 'Steve');
 
   // Update champion display
   if (championEl) {
     championEl.textContent = `Today's Champion 🏆 ${mvpWinner}`;
   }
 
-  const genWinner = data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
+  const genWinner = data.daniel.generated === data.steve.generated ? 'Tied' : (data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve');
   const genValue = Math.max(data.daniel.generated, data.steve.generated);
 
-  const conWinner = data.daniel.consumed < data.steve.consumed ? 'Daniel' : 'Steve';
+  const conWinner = data.daniel.consumed === data.steve.consumed ? 'Tied' : (data.daniel.consumed < data.steve.consumed ? 'Daniel' : 'Steve');
   const conValue = Math.min(data.daniel.consumed, data.steve.consumed);
 
   // Update meta descriptions for social sharing
   const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  const title = `Solar Showdown - ${mvpWinner} is the champion on ${dateStr}!`;
-  const description = `${mvpWinner} generated ${genValue.toFixed(1)} kWh today`;
+  const title = `Solar Showdown - ${mvpWinner}${mvpWinner === 'Tied' ? '!' : ' is the champion'} on ${dateStr}!`;
+  const description = `${genWinner}${genWinner === 'Tied' ? ' generated' : ' leads with'} ${genValue.toFixed(1)} kWh today`;
   
   // Update all meta tags
   document.getElementById('page-title').textContent = title;
@@ -548,26 +563,26 @@ function updateHighScores(data) {
   document.getElementById('twitter-title').content = title;
   document.getElementById('twitter-description').content = description;
 
-  const gridExportWinner = data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
+  const gridExportWinner = data.daniel.soldBack === data.steve.soldBack ? 'Tied' : (data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve');
   const gridExportValue = Math.max(data.daniel.soldBack, data.steve.soldBack);
 
-  const gridImportWinner = data.daniel.imported < data.steve.imported ? 'Daniel' : 'Steve';
+  const gridImportWinner = data.daniel.imported === data.steve.imported ? 'Tied' : (data.daniel.imported < data.steve.imported ? 'Daniel' : 'Steve');
   const gridImportValue = Math.min(data.daniel.imported, data.steve.imported);
 
-  const batteryWinner = data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve';
-  const batteryValue = Math.max(data.daniel.discharged, data.steve.discharged);
+  const batteryWinner = data.daniel.discharged === data.steve.discharged ? 'Tied' : (data.daniel.discharged < data.steve.discharged ? 'Daniel' : 'Steve');
+  const batteryValue = Math.min(data.daniel.discharged, data.steve.discharged);
 
-  const peakPowerWinner = data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve';
+  const peakPowerWinner = data.daniel.maxPv === data.steve.maxPv ? 'Tied' : (data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve');
   const peakPowerValue = Math.max(data.daniel.maxPv, data.steve.maxPv);
 
   // Update high scores display
   const stats = [
-    { label: 'Generated 🌟', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
-    { label: 'Consumed 🌱', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
-    { label: 'Sold to Grid ⚡', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
-    { label: 'Imported from Grid 🔌', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
-    { label: 'Battery Discharge 🪫', value: `${batteryValue.toFixed(1)} kWh - ${batteryWinner}` },
-    { label: 'Peak Power ⚡', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
+    { label: '🌟 Generated', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
+    { label: '🌱 Consumed', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
+    { label: '💰 Sold to Grid', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
+    { label: '🔌 Imported from Grid', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
+    { label: '🪫 Discharged Battery', value: `${batteryValue.toFixed(1)} kWh - ${batteryWinner}` },
+    { label: '⚡ Max PV', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
   ];
 
   stats.forEach(stat => {
