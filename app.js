@@ -8,6 +8,8 @@ const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshow
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
+const CACHE_KEY = 'solar-showdown-data'
+const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds
 
 // DOM Elements
 const loadingIndicator = document.getElementById("loading")
@@ -119,7 +121,26 @@ const mockData = {
 
 // Initialize the application
 function init() {
-  // Initial data fetch
+  // Set today's date
+  const today = new Date()
+  const dateEl = document.getElementById("today-date")
+  if (dateEl) {
+    dateEl.textContent = today.toLocaleDateString()
+  }
+
+  // Try to show cached data immediately
+  const cachedData = localStorage.getItem(CACHE_KEY)
+  if (cachedData) {
+    try {
+      const { data } = JSON.parse(cachedData)
+      updateStats(data)
+      statsContainer.style.opacity = "1"
+    } catch (e) {
+      console.warn('Failed to parse cached data:', e)
+    }
+  }
+
+  // Then fetch fresh data
   fetchAndUpdateData()
 }
 
@@ -127,9 +148,11 @@ function init() {
 async function fetchAndUpdateData() {
   const timeframe = "daily" // Always use daily
 
-  // Show loading state
-  loadingIndicator.style.display = "flex"
-  statsContainer.style.opacity = "0.5"
+  // Only show loading indicator if we don't have cached data
+  const cachedItem = localStorage.getItem(CACHE_KEY)
+  if (!cachedItem) {
+    loadingIndicator.style.display = "flex"
+  }
   errorMessage.style.display = "none"
 
   try {
@@ -140,37 +163,51 @@ async function fetchAndUpdateData() {
       await simulateNetworkDelay(500)
       data = mockData[timeframe]
     } else {
-      console.log('Fetching data from GitHub...')
-      // Fetch real data from GitHub
-      const danielResponse = await fetch(CORS_PROXY + DANIEL_DATA_URL)
-      const steveResponse = await fetch(CORS_PROXY + STEVE_DATA_URL)
-      
-      if (!danielResponse.ok || !steveResponse.ok) {
-        throw new Error("Failed to fetch data from GitHub")
-      }
-      
-      const danielData = await danielResponse.json()
-      const steveData = await steveResponse.json()
-      
-      console.log('Raw data:', { danielData, steveData })
-      
-      data = {
-        daniel: {
-          generated: danielData.generated || 0,
-          consumed: danielData.consumed || 0,
-          soldBack: danielData.exported || 0,
-          imported: danielData.imported || 0,
-          discharged: danielData.discharged || 0,
-          maxPv: danielData.maxPv || 0
-        },
-        steve: {
-          generated: steveData.generated || 0,
-          consumed: steveData.consumed || 0,
-          soldBack: steveData.exported || 0,
-          imported: steveData.imported || 0,
-          discharged: steveData.discharged || 0,
-          maxPv: steveData.maxPv || 0
+      // Try to get data from cache first
+      const cachedData = await getCachedData()
+      if (cachedData) {
+        data = cachedData
+        console.log('Using cached data')
+      } else {
+        console.log('Fetching fresh data from GitHub...')
+        // Fetch both files in parallel
+        const [danielResponse, steveResponse] = await Promise.all([
+          fetch(CORS_PROXY + DANIEL_DATA_URL, { cache: 'no-cache' }),
+          fetch(CORS_PROXY + STEVE_DATA_URL, { cache: 'no-cache' })
+        ])
+        
+        if (!danielResponse.ok || !steveResponse.ok) {
+          throw new Error("Failed to fetch data from GitHub")
         }
+        
+        const [danielData, steveData] = await Promise.all([
+          danielResponse.json(),
+          steveResponse.json()
+        ])
+        
+        console.log('Raw data:', { danielData, steveData })
+        
+        data = {
+          daniel: {
+            generated: danielData.generated || 0,
+            consumed: danielData.consumed || 0,
+            soldBack: danielData.exported || 0,
+            imported: danielData.imported || 0,
+            discharged: danielData.discharged || 0,
+            maxPv: danielData.maxPv || 0
+          },
+          steve: {
+            generated: steveData.generated || 0,
+            consumed: steveData.consumed || 0,
+            soldBack: steveData.exported || 0,
+            imported: steveData.imported || 0,
+            discharged: steveData.discharged || 0,
+            maxPv: steveData.maxPv || 0
+          }
+        }
+
+        // Cache the fetched data
+        await cacheData(data)
       }
       
       console.log('Processed data:', data)
@@ -184,10 +221,46 @@ async function fetchAndUpdateData() {
     statsContainer.style.opacity = "1"
   } catch (error) {
     console.error("Error fetching data:", error)
-    // Show error message
+    // Show error message only if we don't have cached data
     loadingIndicator.style.display = "none"
-    errorMessage.style.display = "block"
-    statsContainer.style.opacity = "0.5"
+    if (!localStorage.getItem(CACHE_KEY)) {
+      errorMessage.style.display = "block"
+      statsContainer.style.opacity = "0.5"
+    }
+  }
+}
+
+// Cache management functions
+async function getCachedData() {
+  try {
+    const cachedItem = localStorage.getItem(CACHE_KEY)
+    if (!cachedItem) return null
+
+    const { timestamp, data } = JSON.parse(cachedItem)
+    const now = Date.now()
+
+    if (now - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(CACHE_KEY)
+      return null
+    }
+
+    return data
+  } catch (e) {
+    console.warn('Cache read error:', e)
+    localStorage.removeItem(CACHE_KEY)
+    return null
+  }
+}
+
+async function cacheData(data) {
+  try {
+    const cacheItem = {
+      timestamp: Date.now(),
+      data
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheItem))
+  } catch (e) {
+    console.warn('Cache write error:', e)
   }
 }
 
