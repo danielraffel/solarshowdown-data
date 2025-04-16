@@ -553,6 +553,15 @@ function updateHighScores(data) {
   const conWinner = data.daniel.consumed < data.steve.consumed ? 'Daniel' : 'Steve';
   const conValue = Math.min(data.daniel.consumed, data.steve.consumed);
 
+  // Update meta descriptions for social sharing
+  const description = `Today's Solar Champion is ${mvpWinner}! 🏆 Generated: ${genValue.toFixed(1)} kWh, Consumed: ${conValue.toFixed(1)} kWh`;
+  
+  const ogDescription = document.getElementById('og-description');
+  const twitterDescription = document.getElementById('twitter-description');
+  
+  if (ogDescription) ogDescription.content = description;
+  if (twitterDescription) twitterDescription.content = description;
+
   const gridExportWinner = data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
   const gridExportValue = Math.max(data.daniel.soldBack, data.steve.soldBack);
 
