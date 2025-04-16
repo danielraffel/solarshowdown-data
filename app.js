@@ -303,6 +303,20 @@ function updateStats(data) {
 
   // Update badges
   updateBadges(data)
+
+  // Update meta descriptions for social sharing
+  const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const title = `Solar Showdown - ${data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'} is the champion on ${dateStr}!`;
+  const description = `${data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'} generated ${Math.max(data.daniel.generated, data.steve.generated).toFixed(1)} kWh today`;
+  
+  // Update all meta tags
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('meta-title').content = title;
+  document.getElementById('meta-description').content = description;
+  document.getElementById('og-title').content = title;
+  document.getElementById('og-description').content = description;
+  document.getElementById('twitter-title').content = title;
+  document.getElementById('twitter-description').content = description;
 }
 
 // Calculate net score
@@ -554,13 +568,18 @@ function updateHighScores(data) {
   const conValue = Math.min(data.daniel.consumed, data.steve.consumed);
 
   // Update meta descriptions for social sharing
-  const description = `Today's Solar Champion is ${mvpWinner}! 🏆 Generated: ${genValue.toFixed(1)} kWh, Consumed: ${conValue.toFixed(1)} kWh`;
+  const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const title = `Solar Showdown - ${mvpWinner} is the champion on ${dateStr}!`;
+  const description = `${mvpWinner} generated ${genValue.toFixed(1)} kWh today`;
   
-  const ogDescription = document.getElementById('og-description');
-  const twitterDescription = document.getElementById('twitter-description');
-  
-  if (ogDescription) ogDescription.content = description;
-  if (twitterDescription) twitterDescription.content = description;
+  // Update all meta tags
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('meta-title').content = title;
+  document.getElementById('meta-description').content = description;
+  document.getElementById('og-title').content = title;
+  document.getElementById('og-description').content = description;
+  document.getElementById('twitter-title').content = title;
+  document.getElementById('twitter-description').content = description;
 
   const gridExportWinner = data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
   const gridExportValue = Math.max(data.daniel.soldBack, data.steve.soldBack);
