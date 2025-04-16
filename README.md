@@ -46,6 +46,7 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 - Vanilla JavaScript
 - [solarshowdown-api](https://github.com/skrul/solarshowdown-api) for data fetching
 - InfluxDB and Grafana for metrics storage
+- GitHub pages for hosting
 
 ## 📊 Data Updates
 
