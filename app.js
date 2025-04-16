@@ -16,6 +16,7 @@ const loadingIndicator = document.getElementById("loading")
 const errorMessage = document.getElementById("error-message")
 const statsContainer = document.getElementById("stats-container")
 const highScoresEl = document.getElementById("high-scores")
+const todayDateEl = document.getElementById("today-date")
 
 // Daniel elements
 const danielGeneratedEl = document.getElementById("daniel-generated")
@@ -120,14 +121,20 @@ const mockData = {
   },
 }
 
+// Update the date immediately when script loads
+document.addEventListener('DOMContentLoaded', function() {
+  if (todayDateEl) {
+    const today = new Date()
+    const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+    todayDateEl.textContent = today.toLocaleDateString('en-US', options)
+  }
+})
+
 // Initialize the application
 function init() {
-  // Set today's date
-  const today = new Date()
-  const dateEl = document.getElementById("today-date")
-  if (dateEl) {
-    dateEl.textContent = today.toLocaleDateString()
-  }
+  // Hide error message initially
+  errorMessage.style.display = "none"
+  statsContainer.style.opacity = "1"
 
   // Try to show cached data immediately
   const cachedData = localStorage.getItem(CACHE_KEY)
@@ -135,7 +142,6 @@ function init() {
     try {
       const { data } = JSON.parse(cachedData)
       updateStats(data)
-      statsContainer.style.opacity = "1"
     } catch (e) {
       console.warn('Failed to parse cached data:', e)
     }
@@ -147,14 +153,13 @@ function init() {
 
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
-  const timeframe = "daily" // Always use daily
-
   // Only show loading indicator if we don't have cached data
   const cachedItem = localStorage.getItem(CACHE_KEY)
   if (!cachedItem) {
     loadingIndicator.style.display = "flex"
   }
   errorMessage.style.display = "none"
+  statsContainer.style.opacity = "1"
 
   try {
     let data
@@ -162,7 +167,8 @@ async function fetchAndUpdateData() {
     if (MOCK_MODE) {
       // Use mock data for development
       await simulateNetworkDelay(500)
-      data = mockData[timeframe]
+      data = mockData.daily
+      console.log('Using mock data:', data)
     } else {
       // Try to get data from cache first
       const cachedData = await getCachedData()
@@ -186,8 +192,6 @@ async function fetchAndUpdateData() {
           steveResponse.json()
         ])
         
-        console.log('Raw data:', { danielData, steveData })
-        
         data = {
           daniel: {
             generated: danielData.generated || 0,
@@ -210,8 +214,6 @@ async function fetchAndUpdateData() {
         // Cache the fetched data
         await cacheData(data)
       }
-      
-      console.log('Processed data:', data)
     }
 
     // Update the UI with the fetched data
@@ -219,12 +221,14 @@ async function fetchAndUpdateData() {
 
     // Hide loading state
     loadingIndicator.style.display = "none"
+    errorMessage.style.display = "none"
     statsContainer.style.opacity = "1"
   } catch (error) {
     console.error("Error fetching data:", error)
-    // Show error message only if we don't have cached data
     loadingIndicator.style.display = "none"
-    if (!localStorage.getItem(CACHE_KEY)) {
+    
+    // Only show error if we're not in mock mode and don't have cached data
+    if (!MOCK_MODE && !localStorage.getItem(CACHE_KEY)) {
       errorMessage.style.display = "block"
       statsContainer.style.opacity = "0.5"
     }
@@ -277,7 +281,7 @@ function updateStats(data) {
   const steveNet = calculateNetScore(data.steve)
 
   // Update high scores summary first
-  updateHighScores(data, danielNet, steveNet)
+  updateHighScores(data)
 
   // Update display values
   danielGeneratedEl.textContent = `${data.daniel.generated.toFixed(1)} kWh`
@@ -546,42 +550,55 @@ async function testDataProcessing() {
 setTimeout(testDataProcessing, 2000)
 
 // Add new function for high scores summary
-function updateHighScores(data, danielNet, steveNet) {
-  // Clear previous content
-  highScoresEl.innerHTML = '';
-  
-  const stats = []
-  
-  // Net Score Winner (👑)
-  const netWinner = danielNet > steveNet ? 'D' : 'S'
-  const netScore = danielNet > steveNet ? danielNet : steveNet
-  stats.push(`<span>Today's Champion: 👑 ${netWinner}</span>`)
-  
-  // Generation (🌟)
-  const genWinner = data.daniel.generated > data.steve.generated ? 'D' : 'S'
-  const genValue = Math.max(data.daniel.generated, data.steve.generated)
-  stats.push(`<span>🌟 Gen: ${genValue.toFixed(1)} ${genWinner}</span>`)
-  
-  // Consumption (🌱) - lower is better
-  const conWinner = data.daniel.consumed < data.steve.consumed ? 'D' : 'S'
-  const conValue = Math.min(data.daniel.consumed, data.steve.consumed)
-  stats.push(`<span>🌱 Con: ${conValue.toFixed(1)} ${conWinner}</span>`)
-  
-  // Grid Export (💰)
-  const soldWinner = data.daniel.soldBack > data.steve.soldBack ? 'D' : 'S'
-  const soldValue = Math.max(data.daniel.soldBack, data.steve.soldBack)
-  stats.push(`<span>💰 Sold: ${soldValue.toFixed(1)} ${soldWinner}</span>`)
-  
-  // Grid Import (🔌) - lower is better
-  const gridWinner = data.daniel.imported < data.steve.imported ? 'D' : 'S'
-  const gridValue = Math.min(data.daniel.imported, data.steve.imported)
-  stats.push(`<span>🔌 Grid: ${gridValue.toFixed(1)} ${gridWinner}</span>`)
-  
-  // Peak Power (⚡)
-  const peakWinner = data.daniel.maxPv > data.steve.maxPv ? 'D' : 'S'
-  const peakValue = Math.max(data.daniel.maxPv, data.steve.maxPv)
-  stats.push(`<span>⚡ MaxPV: ${peakValue.toFixed(1)} ${peakWinner}</span>`)
-  
-  highScoresEl.innerHTML = stats.join(' ')
+function updateHighScores(data) {
+  const highScoresDiv = document.querySelector('.high-scores');
+  highScoresDiv.innerHTML = '';
+
+  // Calculate winners
+  const danielNetScore = data.daniel.generated - data.daniel.consumed;
+  const steveNetScore = data.steve.generated - data.steve.consumed;
+  const netWinner = danielNetScore > steveNetScore ? 'Daniel' : 'Steve';
+  const netValue = Math.max(danielNetScore, steveNetScore);
+
+  const genWinner = data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
+  const genValue = Math.max(data.daniel.generated, data.steve.generated);
+
+  const conWinner = data.daniel.consumed < data.steve.consumed ? 'Daniel' : 'Steve';
+  const conValue = Math.min(data.daniel.consumed, data.steve.consumed);
+
+  const gridExportWinner = data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve';
+  const gridExportValue = Math.max(data.daniel.soldBack, data.steve.soldBack);
+
+  const gridImportWinner = data.daniel.imported < data.steve.imported ? 'Daniel' : 'Steve';
+  const gridImportValue = Math.min(data.daniel.imported, data.steve.imported);
+
+  const peakPowerWinner = data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve';
+  const peakPowerValue = Math.max(data.daniel.maxPv, data.steve.maxPv);
+
+  // Update high scores display
+  const stats = [
+    { label: 'Net Score 🏆', value: `${netValue.toFixed(1)} kWh - ${netWinner}` },
+    { label: 'Generated 🌟', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
+    { label: 'Consumed 🌱', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
+    { label: 'Sold to Grid ⚡', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
+    { label: 'Imported from Grid 🔌', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
+    { label: 'Peak Power ⚡', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
+  ];
+
+  stats.forEach(stat => {
+    const div = document.createElement('div');
+    div.className = 'high-score-item';
+    div.innerHTML = `
+      <span class="label">${stat.label}</span>
+      <span class="value">${stat.value}</span>
+    `;
+    highScoresDiv.appendChild(div);
+  });
+
+  // Update net champion in bonus categories
+  const netChampionDiv = document.querySelector('.bonus-grid .bonus-item:last-child .bonus-winner');
+  if (netChampionDiv) {
+    netChampionDiv.textContent = netWinner;
+  }
 }
 

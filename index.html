@@ -13,8 +13,11 @@
   <div class="container">
     <header>
       <h1>🌞 Solar Showdown</h1>
-      <p class="subtitle">The ultimate energy face-off between Daniel and Steve — <span id="today-date"></span></p>
-      <p class="high-scores" id="high-scores"></p>
+      <div class="subtitle">
+        <p>High Scores for</p>
+        <p id="today-date"></p>
+      </div>
+      <div class="high-scores" id="high-scores"></div>
       
       <!--
       <div class="view-controls">
@@ -156,6 +159,10 @@
             <div class="bonus-title">⚡ Peak Performer</div>
             <div class="bonus-winner" id="peak-performer">-</div>
           </div>
+          <div class="bonus-item">
+            <div class="bonus-title">👑 Net Champion</div>
+            <div class="bonus-winner" id="net-champion">-</div>
+          </div>
         </div>
       </div>
 
@@ -222,13 +229,7 @@
     </footer>
   </div>
 
-  <script>
-    // Add cache-busting parameter to force browser to load latest version
-    const scriptEl = document.createElement('script');
-    scriptEl.src = `app.js?v=${new Date().getTime()}`;
-    document.body.appendChild(scriptEl);
-  </script>
-  <!-- <script src="app.js"></script> -->
+  <script src="app.js"></script>
 </body>
 </html>
 
