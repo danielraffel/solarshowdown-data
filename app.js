@@ -17,6 +17,7 @@ const errorMessage = document.getElementById("error-message")
 const statsContainer = document.getElementById("stats-container")
 const highScoresEl = document.getElementById("high-scores")
 const todayDateEl = document.getElementById("today-date")
+const championEl = document.getElementById("todays-champion")
 
 // Daniel elements
 const danielGeneratedEl = document.getElementById("daniel-generated")
@@ -542,9 +543,8 @@ function updateHighScores(data) {
   const mvpWinner = danielNetScore > steveNetScore ? 'Daniel' : 'Steve';
 
   // Update champion display
-  const championDiv = document.getElementById('todays-champion');
-  if (championDiv) {
-    championDiv.textContent = `Today's Champion 🏆 ${mvpWinner}`;
+  if (championEl) {
+    championEl.textContent = `Today's Champion 🏆 ${mvpWinner}`;
   }
 
   const genWinner = data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
