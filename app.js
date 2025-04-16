@@ -2,8 +2,8 @@
 console.log('App.js loaded - v2.3 - Using GitHub raw URLs')
 
 // Configuration
-const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/daniel.json"
-const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/refs/heads/main/steve.json"
+const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/daniel.json"
+const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/steve.json"
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
@@ -121,20 +121,18 @@ const mockData = {
   },
 }
 
-// Update the date immediately when script loads
-document.addEventListener('DOMContentLoaded', function() {
-  if (todayDateEl) {
-    const today = new Date()
-    const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
-    todayDateEl.textContent = today.toLocaleDateString('en-US', options)
-  }
-})
+// Set today's date immediately
+const today = new Date()
+const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+if (todayDateEl) {
+  todayDateEl.textContent = today.toLocaleDateString('en-US', options)
+}
 
 // Initialize the application
 function init() {
   // Hide error message initially
-  errorMessage.style.display = "none"
-  statsContainer.style.opacity = "1"
+  if (errorMessage) errorMessage.style.display = "none"
+  if (statsContainer) statsContainer.style.opacity = "1"
 
   // Try to show cached data immediately
   const cachedData = localStorage.getItem(CACHE_KEY)
@@ -153,13 +151,9 @@ function init() {
 
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
-  // Only show loading indicator if we don't have cached data
-  const cachedItem = localStorage.getItem(CACHE_KEY)
-  if (!cachedItem) {
-    loadingIndicator.style.display = "flex"
-  }
-  errorMessage.style.display = "none"
-  statsContainer.style.opacity = "1"
+  if (loadingIndicator) loadingIndicator.style.display = "flex"
+  if (errorMessage) errorMessage.style.display = "none"
+  if (statsContainer) statsContainer.style.opacity = "1"
 
   try {
     let data
@@ -170,68 +164,56 @@ async function fetchAndUpdateData() {
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // Try to get data from cache first
-      const cachedData = await getCachedData()
-      if (cachedData) {
-        data = cachedData
-        console.log('Using cached data')
-      } else {
-        console.log('Fetching fresh data from GitHub...')
-        // Fetch both files in parallel
-        const [danielResponse, steveResponse] = await Promise.all([
-          fetch(CORS_PROXY + DANIEL_DATA_URL, { cache: 'no-cache' }),
-          fetch(CORS_PROXY + STEVE_DATA_URL, { cache: 'no-cache' })
-        ])
-        
-        if (!danielResponse.ok || !steveResponse.ok) {
-          throw new Error("Failed to fetch data from GitHub")
-        }
-        
-        const [danielData, steveData] = await Promise.all([
-          danielResponse.json(),
-          steveResponse.json()
-        ])
-        
-        data = {
-          daniel: {
-            generated: danielData.generated || 0,
-            consumed: danielData.consumed || 0,
-            soldBack: danielData.exported || 0,
-            imported: danielData.imported || 0,
-            discharged: danielData.discharged || 0,
-            maxPv: danielData.maxPv || 0
-          },
-          steve: {
-            generated: steveData.generated || 0,
-            consumed: steveData.consumed || 0,
-            soldBack: steveData.exported || 0,
-            imported: steveData.imported || 0,
-            discharged: steveData.discharged || 0,
-            maxPv: steveData.maxPv || 0
-          }
-        }
-
-        // Cache the fetched data
-        await cacheData(data)
+      // Fetch both files in parallel
+      const [danielResponse, steveResponse] = await Promise.all([
+        fetch(DANIEL_DATA_URL),
+        fetch(STEVE_DATA_URL)
+      ])
+      
+      if (!danielResponse.ok || !steveResponse.ok) {
+        throw new Error("Failed to fetch data from GitHub")
       }
+      
+      const [danielData, steveData] = await Promise.all([
+        danielResponse.json(),
+        steveResponse.json()
+      ])
+      
+      data = {
+        daniel: {
+          generated: danielData.generated || 0,
+          consumed: danielData.consumed || 0,
+          soldBack: danielData.exported || 0,
+          imported: danielData.imported || 0,
+          discharged: danielData.discharged || 0,
+          maxPv: danielData.maxPv || 0
+        },
+        steve: {
+          generated: steveData.generated || 0,
+          consumed: steveData.consumed || 0,
+          soldBack: steveData.exported || 0,
+          imported: steveData.imported || 0,
+          discharged: steveData.discharged || 0,
+          maxPv: steveData.maxPv || 0
+        }
+      }
+
+      // Cache the fetched data
+      await cacheData(data)
     }
 
     // Update the UI with the fetched data
     updateStats(data)
 
     // Hide loading state
-    loadingIndicator.style.display = "none"
-    errorMessage.style.display = "none"
-    statsContainer.style.opacity = "1"
+    if (loadingIndicator) loadingIndicator.style.display = "none"
+    if (errorMessage) errorMessage.style.display = "none"
+    if (statsContainer) statsContainer.style.opacity = "1"
   } catch (error) {
     console.error("Error fetching data:", error)
-    loadingIndicator.style.display = "none"
-    
-    // Only show error if we're not in mock mode and don't have cached data
-    if (!MOCK_MODE && !localStorage.getItem(CACHE_KEY)) {
-      errorMessage.style.display = "block"
-      statsContainer.style.opacity = "0.5"
-    }
+    if (loadingIndicator) loadingIndicator.style.display = "none"
+    if (errorMessage) errorMessage.style.display = "block"
+    if (statsContainer) statsContainer.style.opacity = "0.5"
   }
 }
 
