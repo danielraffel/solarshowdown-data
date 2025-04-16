@@ -539,8 +539,13 @@ function updateHighScores(data) {
   // Calculate winners
   const danielNetScore = data.daniel.generated - data.daniel.consumed;
   const steveNetScore = data.steve.generated - data.steve.consumed;
-  const netWinner = danielNetScore > steveNetScore ? 'Daniel' : 'Steve';
-  const netValue = Math.max(danielNetScore, steveNetScore);
+  const mvpWinner = danielNetScore > steveNetScore ? 'Daniel' : 'Steve';
+
+  // Update champion display
+  const championDiv = document.getElementById('todays-champion');
+  if (championDiv) {
+    championDiv.textContent = `Today's Champion 🏆 ${mvpWinner}`;
+  }
 
   const genWinner = data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve';
   const genValue = Math.max(data.daniel.generated, data.steve.generated);
@@ -554,16 +559,19 @@ function updateHighScores(data) {
   const gridImportWinner = data.daniel.imported < data.steve.imported ? 'Daniel' : 'Steve';
   const gridImportValue = Math.min(data.daniel.imported, data.steve.imported);
 
+  const batteryWinner = data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve';
+  const batteryValue = Math.max(data.daniel.discharged, data.steve.discharged);
+
   const peakPowerWinner = data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve';
   const peakPowerValue = Math.max(data.daniel.maxPv, data.steve.maxPv);
 
   // Update high scores display
   const stats = [
-    { label: 'Net Score 🏆', value: `${netValue.toFixed(1)} kWh - ${netWinner}` },
     { label: 'Generated 🌟', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
     { label: 'Consumed 🌱', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
     { label: 'Sold to Grid ⚡', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
     { label: 'Imported from Grid 🔌', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
+    { label: 'Battery Discharge 🪫', value: `${batteryValue.toFixed(1)} kWh - ${batteryWinner}` },
     { label: 'Peak Power ⚡', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
   ];
 
@@ -580,7 +588,7 @@ function updateHighScores(data) {
   // Update net champion in bonus categories
   const netChampionDiv = document.querySelector('.bonus-grid .bonus-item:last-child .bonus-winner');
   if (netChampionDiv) {
-    netChampionDiv.textContent = netWinner;
+    netChampionDiv.textContent = mvpWinner;
   }
 }
 
