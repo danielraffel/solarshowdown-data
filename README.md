@@ -29,6 +29,7 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 - Social media preview cards
 - Responsive design
 - Emoji indicators for achievements
+- Day / Night mode
 
 ## 🏆 Bonus Categories
 
