@@ -578,12 +578,12 @@ function updateHighScores(data) {
 
   // Update high scores display
   const stats = [
-    { label: '🌟 Generated', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
-    { label: '🌱 Consumed', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
-    { label: '💰 Sold to Grid', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
-    { label: '🔌 Imported from Grid', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
-    { label: '🪫 Discharged Battery', value: `${batteryValue.toFixed(1)} kWh - ${batteryWinner}` },
-    { label: '⚡ Max PV', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
+    { label: '🌟 Generated More', value: `${genValue.toFixed(1)} kWh - ${genWinner}` },
+    { label: '🌱 Consumed Less', value: `${conValue.toFixed(1)} kWh - ${conWinner}` },
+    { label: '💰 Sold More to Grid', value: `${gridExportValue.toFixed(1)} kWh - ${gridExportWinner}` },
+    { label: '🔌 Imported Less from Grid', value: `${gridImportValue.toFixed(1)} kWh - ${gridImportWinner}` },
+    { label: '🪫 Discharged Less Battery', value: `${batteryValue.toFixed(1)} kWh - ${batteryWinner}` },
+    { label: '⚡ Highest Max PV', value: `${peakPowerValue.toFixed(1)} kW - ${peakPowerWinner}` }
   ];
 
   stats.forEach(stat => {
