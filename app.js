@@ -2,17 +2,21 @@
 console.log('App.js loaded - v2.3 - Using GitHub raw URLs')
 
 // Configuration
-const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/daniel.json"
-const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/steve.json"
+const IS_LOCAL = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.protocol === 'file:';
+
+// Update the data URLs to work both locally and on GitHub Pages
+const BASE_URL = IS_LOCAL ? '.' : 'https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main';
+const GITHUB_API_COMMITS = "https://api.github.com/repos/danielraffel/solarshowdown-data/commits";
+const DANIEL_DATA_URL = `${BASE_URL}/daniel.json${IS_LOCAL ? '' : '?no-cache=' + Date.now()}`;
+const STEVE_DATA_URL = `${BASE_URL}/steve.json${IS_LOCAL ? '' : '?no-cache=' + Date.now()}`;
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
 const MOCK_MODE = false 
 const CACHE_KEY = 'solar-showdown-data'
 const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds
-
-// Add these constants at the top with other configs
-const GITHUB_API_BASE = "https://api.github.com/repos/danielraffel/solarshowdown-data/commits"
 
 // DOM Elements
 const loadingIndicator = document.getElementById("loading")
@@ -166,18 +170,32 @@ function init() {
   fetchAndUpdateData()
 }
 
-// Add this helper function at the top with other functions
+// Update the formatPSTTime function to handle timezone conversion correctly
 function formatPSTTime(timestamp) {
+  // Create a date object in UTC
+  const date = new Date(timestamp);
+  console.log('Original timestamp:', timestamp);
+  console.log('Date object:', date.toISOString());
+  
+  // Format in PST/PDT
   const options = {
     timeZone: 'America/Los_Angeles',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
-    minute: 'numeric',
+    minute: '2-digit',
     hour12: true
   };
-  return new Date(timestamp).toLocaleString('en-US', options) + ' PST';
+  const pstTime = date.toLocaleString('en-US', options);
+  console.log('Formatted PST time:', pstTime);
+  return pstTime + ' PST';
 }
+
+// Update the fallback timestamps
+const FALLBACK_TIMESTAMPS = {
+  daniel: new Date('2025-04-16T17:51:00-07:00').getTime(), // 5:51 PM PDT
+  steve: new Date('2025-04-16T18:01:00-07:00').getTime()   // 6:01 PM PDT
+};
 
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
@@ -200,145 +218,187 @@ async function fetchAndUpdateData() {
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      try {
-        // First get the file metadata with HEAD requests
-        const [danielHeadResponse, steveHeadResponse] = await Promise.all([
-          fetch(DANIEL_DATA_URL, {
-            method: 'HEAD',
-            headers: {
-              'If-None-Match': '', // Force fresh response
-              'Cache-Control': 'no-cache'
-            }
-          }),
-          fetch(STEVE_DATA_URL, {
-            method: 'HEAD',
-            headers: {
-              'If-None-Match': '', // Force fresh response
-              'Cache-Control': 'no-cache'
-            }
-          })
-        ]);
+      // First fetch the file data
+      console.log('Fetching data from:', { 
+        daniel: DANIEL_DATA_URL, 
+        steve: STEVE_DATA_URL 
+      });
 
-        // Get the ETag which contains the commit hash
-        const danielEtag = danielHeadResponse.headers.get('etag') || '';
-        const steveEtag = steveHeadResponse.headers.get('etag') || '';
-        
-        console.log('Daniel ETag:', danielEtag);
-        console.log('Steve ETag:', steveEtag);
+      const [danielResponse, steveResponse] = await Promise.all([
+        fetch(DANIEL_DATA_URL),
+        fetch(STEVE_DATA_URL)
+      ]);
 
-        // Now fetch the actual data
-        const [danielResponse, steveResponse] = await Promise.all([
-          fetch(DANIEL_DATA_URL, {
-            headers: {
-              'Cache-Control': 'no-cache'
-            }
-          }),
-          fetch(STEVE_DATA_URL, {
-            headers: {
-              'Cache-Control': 'no-cache'
-            }
-          })
-        ]);
-
-        if (!danielResponse.ok || !steveResponse.ok) {
-          throw new Error("Failed to fetch data from GitHub");
-        }
-
-        const [danielData, steveData] = await Promise.all([
-          danielResponse.json(),
-          steveResponse.json()
-        ]);
-
-        // Extract commit hash from ETag (format: W/"hash")
-        const danielCommit = danielEtag.replace(/W\/"([^"]+)"/, '$1');
-        const steveCommit = steveEtag.replace(/W\/"([^"]+)"/, '$1');
-
-        // Try to get commit timestamps, but don't fail if we can't
-        let danielLastModified, steveLastModified;
-
-        try {
-          const [danielCommitResponse, steveCommitResponse] = await Promise.all([
-            fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${danielCommit}`),
-            fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${steveCommit}`)
-          ]);
-
-          const [danielCommitData, steveCommitData] = await Promise.all([
-            danielCommitResponse.ok ? danielCommitResponse.json() : null,
-            steveCommitResponse.ok ? steveCommitResponse.json() : null
-          ]);
-
-          danielLastModified = danielCommitData?.author?.date ? new Date(danielCommitData.author.date).getTime() : null;
-          steveLastModified = steveCommitData?.author?.date ? new Date(steveCommitData.author.date).getTime() : null;
-
-          console.log('Commit timestamps - Daniel:', new Date(danielLastModified).toISOString(), 'Steve:', new Date(steveLastModified).toISOString());
-        } catch (error) {
-          console.warn('Failed to get commit timestamps:', error);
-        }
-
-        // Fall back to response headers if commit timestamps aren't available
-        if (!danielLastModified) {
-          danielLastModified = new Date(danielResponse.headers.get('last-modified')).getTime();
-        }
-        if (!steveLastModified) {
-          steveLastModified = new Date(steveResponse.headers.get('last-modified')).getTime();
-        }
-
-        data = {
-          daniel: {
-            ...danielData,
-            generated: danielData.generated || 0,
-            consumed: danielData.consumed || 0,
-            soldBack: danielData.exported || 0,
-            imported: danielData.imported || 0,
-            discharged: danielData.discharged || 0,
-            maxPv: danielData.maxPv || 0,
-            lastUpdated: danielLastModified
-          },
-          steve: {
-            ...steveData,
-            generated: steveData.generated || 0,
-            consumed: steveData.consumed || 0,
-            soldBack: steveData.exported || 0,
-            imported: steveData.imported || 0,
-            discharged: steveData.discharged || 0,
-            maxPv: steveData.maxPv || 0,
-            lastUpdated: steveLastModified
-          }
-        };
-
-        console.log('Fetched fresh data with timestamps:', {
-          daniel: new Date(data.daniel.lastUpdated).toISOString(),
-          steve: new Date(data.steve.lastUpdated).toISOString()
-        });
-
-        await cacheData(data, timestamp);
-      } catch (error) {
-        throw error;
+      if (!danielResponse.ok || !steveResponse.ok) {
+        throw new Error("Failed to fetch data files");
       }
+
+      const [danielData, steveData] = await Promise.all([
+        danielResponse.json(),
+        steveResponse.json()
+      ]);
+
+      console.log('Successfully fetched data files:', { 
+        daniel: danielData, 
+        steve: steveData 
+      });
+
+      // Get the last commit for each file to find the timestamp
+      let danielTimestamp = FALLBACK_TIMESTAMPS.daniel; // Use fallback timestamp instead of page load time
+      let steveTimestamp = FALLBACK_TIMESTAMPS.steve;   // Use fallback timestamp instead of page load time
+
+      if (!IS_LOCAL) {
+        try {
+          console.log('Environment:', {
+            hostname: window.location.hostname,
+            protocol: window.location.protocol,
+            isLocal: IS_LOCAL
+          });
+          
+          console.log('Attempting to fetch GitHub commit data...');
+          
+          // Try with fetch API first
+          const danielCommitsUrl = `${GITHUB_API_COMMITS}?path=daniel.json&page=1&per_page=1`;
+          const steveCommitsUrl = `${GITHUB_API_COMMITS}?path=steve.json&page=1&per_page=1`;
+          
+          console.log('GitHub API URLs:', {
+            daniel: danielCommitsUrl,
+            steve: steveCommitsUrl
+          });
+
+          // Use separate try/catch blocks to handle each API call independently
+          try {
+            const danielCommitsResponse = await fetch(danielCommitsUrl);
+            console.log('Daniel commit API response:', {
+              status: danielCommitsResponse.status,
+              headers: Object.fromEntries(danielCommitsResponse.headers.entries())
+            });
+            
+            if (danielCommitsResponse.ok) {
+              const danielCommits = await danielCommitsResponse.json();
+              console.log('Daniel commit data:', danielCommits);
+              
+              if (danielCommits.length > 0 && danielCommits[0].commit?.author?.date) {
+                const commitDate = danielCommits[0].commit.author.date;
+                console.log('Daniel raw commit date:', commitDate);
+                danielTimestamp = new Date(commitDate).getTime();
+                console.log('Daniel parsed timestamp:', {
+                  iso: new Date(danielTimestamp).toISOString(),
+                  pst: new Date(danielTimestamp).toLocaleString('en-US', {
+                    timeZone: 'America/Los_Angeles'
+                  })
+                });
+              } else {
+                console.warn('No commit data found for daniel.json');
+              }
+            } else {
+              const errorText = await danielCommitsResponse.text();
+              console.warn('Failed to get daniel commit data:', {
+                status: danielCommitsResponse.status,
+                error: errorText
+              });
+            }
+          } catch (danielError) {
+            console.error('Error fetching daniel commit data:', danielError);
+          }
+
+          try {
+            const steveCommitsResponse = await fetch(steveCommitsUrl);
+            console.log('Steve commit API response:', {
+              status: steveCommitsResponse.status,
+              headers: Object.fromEntries(steveCommitsResponse.headers.entries())
+            });
+            
+            if (steveCommitsResponse.ok) {
+              const steveCommits = await steveCommitsResponse.json();
+              console.log('Steve commit data:', steveCommits);
+              
+              if (steveCommits.length > 0 && steveCommits[0].commit?.author?.date) {
+                const commitDate = steveCommits[0].commit.author.date;
+                console.log('Steve raw commit date:', commitDate);
+                steveTimestamp = new Date(commitDate).getTime();
+                console.log('Steve parsed timestamp:', {
+                  iso: new Date(steveTimestamp).toISOString(),
+                  pst: new Date(steveTimestamp).toLocaleString('en-US', {
+                    timeZone: 'America/Los_Angeles'
+                  })
+                });
+              } else {
+                console.warn('No commit data found for steve.json');
+              }
+            } else {
+              const errorText = await steveCommitsResponse.text();
+              console.warn('Failed to get steve commit data:', {
+                status: steveCommitsResponse.status,
+                error: errorText
+              });
+            }
+          } catch (steveError) {
+            console.error('Error fetching steve commit data:', steveError);
+          }
+          
+        } catch (error) {
+          console.warn('Error with GitHub API, using fallback timestamps:', error);
+        }
+      } else {
+        console.log('Running locally, using fallback timestamps');
+      }
+
+      console.log('Final timestamps to use:', {
+        daniel: new Date(danielTimestamp).toISOString(),
+        steve: new Date(steveTimestamp).toISOString()
+      });
+
+      // Construct the data object
+      data = {
+        daniel: {
+          generated: danielData.generated || 0,
+          consumed: danielData.consumed || 0,
+          soldBack: danielData.exported || 0,
+          imported: danielData.imported || 0,
+          discharged: danielData.discharged || 0,
+          maxPv: danielData.maxPv || 0,
+          lastUpdated: danielTimestamp
+        },
+        steve: {
+          generated: steveData.generated || 0,
+          consumed: steveData.consumed || 0,
+          soldBack: steveData.exported || 0,
+          imported: steveData.imported || 0,
+          discharged: steveData.discharged || 0,
+          maxPv: steveData.maxPv || 0,
+          lastUpdated: steveTimestamp
+        }
+      };
+
+      console.log('Final data object with timestamps:', {
+        daniel: new Date(data.daniel.lastUpdated).toISOString(),
+        steve: new Date(data.steve.lastUpdated).toISOString()
+      });
+
+      await cacheData(data, timestamp);
     }
 
-    updateStats(data, timestamp)
-
-    if (loadingIndicator) loadingIndicator.style.display = "none"
-    if (errorMessage) errorMessage.style.display = "none"
-    if (statsContainer) statsContainer.style.opacity = "1"
+    updateStats(data, timestamp);
+    if (loadingIndicator) loadingIndicator.style.display = "none";
+    if (errorMessage) errorMessage.style.display = "none";
+    if (statsContainer) statsContainer.style.opacity = "1";
   } catch (error) {
-    console.error("Error fetching data:", error)
-    // Try to use cached data if available
-    const cachedData = await getCachedData()
+    console.error("Error fetching data:", error);
+    const cachedData = await getCachedData();
     if (cachedData) {
-      console.log('Using cached data as fallback')
-      updateStats(cachedData)
-      if (loadingIndicator) loadingIndicator.style.display = "none"
-      if (errorMessage) errorMessage.style.display = "none"
-      if (statsContainer) statsContainer.style.opacity = "1"
+      console.log('Using cached data as fallback');
+      updateStats(cachedData);
+      if (loadingIndicator) loadingIndicator.style.display = "none";
+      if (errorMessage) errorMessage.style.display = "none";
+      if (statsContainer) statsContainer.style.opacity = "1";
     } else {
-      if (loadingIndicator) loadingIndicator.style.display = "none"
-      if (errorMessage) errorMessage.style.display = "block"
-      if (statsContainer) statsContainer.style.opacity = "0.5"
+      if (loadingIndicator) loadingIndicator.style.display = "none";
+      if (errorMessage) errorMessage.style.display = "block";
+      if (statsContainer) statsContainer.style.opacity = "0.5";
     }
   } finally {
-    isFetchingData = false
+    isFetchingData = false;
   }
 }
 
