@@ -200,107 +200,121 @@ async function fetchAndUpdateData() {
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // First get the file metadata with HEAD requests
-      const [danielHeadResponse, steveHeadResponse] = await Promise.all([
-        fetch(DANIEL_DATA_URL, {
-          method: 'HEAD',
-          headers: {
-            'If-None-Match': '', // Force fresh response
-            'Cache-Control': 'no-cache'
-          }
-        }),
-        fetch(STEVE_DATA_URL, {
-          method: 'HEAD',
-          headers: {
-            'If-None-Match': '', // Force fresh response
-            'Cache-Control': 'no-cache'
-          }
-        })
-      ]);
-
-      // Get the ETag which contains the commit hash
-      const danielEtag = danielHeadResponse.headers.get('etag') || '';
-      const steveEtag = steveHeadResponse.headers.get('etag') || '';
-      
-      console.log('Daniel ETag:', danielEtag);
-      console.log('Steve ETag:', steveEtag);
-
-      // Now fetch the actual data
-      const [danielResponse, steveResponse] = await Promise.all([
-        fetch(DANIEL_DATA_URL, {
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        }),
-        fetch(STEVE_DATA_URL, {
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        })
-      ])
-      
-      if (!danielResponse.ok || !steveResponse.ok) {
-        throw new Error("Failed to fetch data from GitHub")
-      }
-
-      const [danielData, steveData] = await Promise.all([
-        danielResponse.json(),
-        steveResponse.json()
-      ])
-
-      // Extract commit hash from ETag (format: W/"hash")
-      const danielCommit = danielEtag.replace(/W\/"([^"]+)"/, '$1');
-      const steveCommit = steveEtag.replace(/W\/"([^"]+)"/, '$1');
-
-      // Try to get commit timestamps, but don't fail if we can't
-      let danielLastModified = timestamp;
-      let steveLastModified = timestamp;
-
       try {
-        const [danielCommitResponse, steveCommitResponse] = await Promise.all([
-          fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${danielCommit}`),
-          fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${steveCommit}`)
+        // First get the file metadata with HEAD requests
+        const [danielHeadResponse, steveHeadResponse] = await Promise.all([
+          fetch(DANIEL_DATA_URL, {
+            method: 'HEAD',
+            headers: {
+              'If-None-Match': '', // Force fresh response
+              'Cache-Control': 'no-cache'
+            }
+          }),
+          fetch(STEVE_DATA_URL, {
+            method: 'HEAD',
+            headers: {
+              'If-None-Match': '', // Force fresh response
+              'Cache-Control': 'no-cache'
+            }
+          })
         ]);
 
-        if (danielCommitResponse.ok) {
-          const danielCommitData = await danielCommitResponse.json();
-          danielLastModified = new Date(danielCommitData.author.date).getTime();
+        // Get the ETag which contains the commit hash
+        const danielEtag = danielHeadResponse.headers.get('etag') || '';
+        const steveEtag = steveHeadResponse.headers.get('etag') || '';
+        
+        console.log('Daniel ETag:', danielEtag);
+        console.log('Steve ETag:', steveEtag);
+
+        // Now fetch the actual data
+        const [danielResponse, steveResponse] = await Promise.all([
+          fetch(DANIEL_DATA_URL, {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          }),
+          fetch(STEVE_DATA_URL, {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          })
+        ]);
+
+        if (!danielResponse.ok || !steveResponse.ok) {
+          throw new Error("Failed to fetch data from GitHub");
         }
 
-        if (steveCommitResponse.ok) {
-          const steveCommitData = await steveCommitResponse.json();
-          steveLastModified = new Date(steveCommitData.author.date).getTime();
+        const [danielData, steveData] = await Promise.all([
+          danielResponse.json(),
+          steveResponse.json()
+        ]);
+
+        // Extract commit hash from ETag (format: W/"hash")
+        const danielCommit = danielEtag.replace(/W\/"([^"]+)"/, '$1');
+        const steveCommit = steveEtag.replace(/W\/"([^"]+)"/, '$1');
+
+        // Try to get commit timestamps, but don't fail if we can't
+        let danielLastModified, steveLastModified;
+
+        try {
+          const [danielCommitResponse, steveCommitResponse] = await Promise.all([
+            fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${danielCommit}`),
+            fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${steveCommit}`)
+          ]);
+
+          const [danielCommitData, steveCommitData] = await Promise.all([
+            danielCommitResponse.ok ? danielCommitResponse.json() : null,
+            steveCommitResponse.ok ? steveCommitResponse.json() : null
+          ]);
+
+          danielLastModified = danielCommitData?.author?.date ? new Date(danielCommitData.author.date).getTime() : null;
+          steveLastModified = steveCommitData?.author?.date ? new Date(steveCommitData.author.date).getTime() : null;
+
+          console.log('Commit timestamps - Daniel:', new Date(danielLastModified).toISOString(), 'Steve:', new Date(steveLastModified).toISOString());
+        } catch (error) {
+          console.warn('Failed to get commit timestamps:', error);
         }
+
+        // Fall back to response headers if commit timestamps aren't available
+        if (!danielLastModified) {
+          danielLastModified = new Date(danielResponse.headers.get('last-modified')).getTime();
+        }
+        if (!steveLastModified) {
+          steveLastModified = new Date(steveResponse.headers.get('last-modified')).getTime();
+        }
+
+        data = {
+          daniel: {
+            ...danielData,
+            generated: danielData.generated || 0,
+            consumed: danielData.consumed || 0,
+            soldBack: danielData.exported || 0,
+            imported: danielData.imported || 0,
+            discharged: danielData.discharged || 0,
+            maxPv: danielData.maxPv || 0,
+            lastUpdated: danielLastModified
+          },
+          steve: {
+            ...steveData,
+            generated: steveData.generated || 0,
+            consumed: steveData.consumed || 0,
+            soldBack: steveData.exported || 0,
+            imported: steveData.imported || 0,
+            discharged: steveData.discharged || 0,
+            maxPv: steveData.maxPv || 0,
+            lastUpdated: steveLastModified
+          }
+        };
+
+        console.log('Fetched fresh data with timestamps:', {
+          daniel: new Date(data.daniel.lastUpdated).toISOString(),
+          steve: new Date(data.steve.lastUpdated).toISOString()
+        });
+
+        await cacheData(data, timestamp);
       } catch (error) {
-        console.warn('Failed to get commit timestamps:', error);
-        // Use response headers as fallback
-        danielLastModified = new Date(danielResponse.headers.get('last-modified')).getTime();
-        steveLastModified = new Date(steveResponse.headers.get('last-modified')).getTime();
+        throw error;
       }
-      
-      data = {
-        daniel: {
-          generated: danielData.generated || 0,
-          consumed: danielData.consumed || 0,
-          soldBack: danielData.exported || 0,
-          imported: danielData.imported || 0,
-          discharged: danielData.discharged || 0,
-          maxPv: danielData.maxPv || 0,
-          lastUpdated: danielLastModified
-        },
-        steve: {
-          generated: steveData.generated || 0,
-          consumed: steveData.consumed || 0,
-          soldBack: steveData.exported || 0,
-          imported: steveData.imported || 0,
-          discharged: steveData.discharged || 0,
-          maxPv: steveData.maxPv || 0,
-          lastUpdated: steveLastModified
-        }
-      }
-
-      console.log('Fetched fresh data:', data)
-      await cacheData(data, timestamp)
     }
 
     updateStats(data, timestamp)
