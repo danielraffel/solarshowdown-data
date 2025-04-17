@@ -49,7 +49,7 @@ const energyVampireEl = document.getElementById("energy-vampire")
 const batteryBossEl = document.getElementById("battery-boss")
 const peakPerformerEl = document.getElementById("peak-performer")
 
-// Mock data for development (when API is not available)
+// Update mock data to include timestamps
 const mockData = {
   daily: {
     daniel: {
@@ -59,6 +59,7 @@ const mockData = {
       imported: 1.2,
       discharged: 2.1,
       maxPv: 5.5,
+      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 19.5,
@@ -67,6 +68,7 @@ const mockData = {
       imported: 1.5,
       discharged: 1.8,
       maxPv: 4.9,
+      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   weekly: {
@@ -77,6 +79,7 @@ const mockData = {
       imported: 7.5,
       discharged: 12.2,
       maxPv: 7.8,
+      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 156.2,
@@ -85,6 +88,7 @@ const mockData = {
       imported: 8.1,
       discharged: 10.5,
       maxPv: 7.2,
+      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   monthly: {
@@ -95,6 +99,7 @@ const mockData = {
       imported: 32.1,
       discharged: 48.7,
       maxPv: 9.2,
+      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 602.8,
@@ -103,6 +108,7 @@ const mockData = {
       imported: 35.4,
       discharged: 44.3,
       maxPv: 8.7,
+      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   yearly: {
@@ -113,6 +119,7 @@ const mockData = {
       imported: 410.2,
       discharged: 590.1,
       maxPv: 12.3,
+      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 7105.3,
@@ -121,6 +128,7 @@ const mockData = {
       imported: 430.7,
       discharged: 570.8,
       maxPv: 11.8,
+      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
 }
@@ -192,16 +200,43 @@ async function fetchAndUpdateData() {
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // Fetch the last commit for each file
-      const [danielCommitResponse, steveCommitResponse] = await Promise.all([
-        fetch(`${GITHUB_API_BASE}?path=daniel.json&page=1&per_page=1`),
-        fetch(`${GITHUB_API_BASE}?path=steve.json&page=1&per_page=1`)
+      // First get the file metadata with HEAD requests
+      const [danielHeadResponse, steveHeadResponse] = await Promise.all([
+        fetch(DANIEL_DATA_URL, {
+          method: 'HEAD',
+          headers: {
+            'If-None-Match': '', // Force fresh response
+            'Cache-Control': 'no-cache'
+          }
+        }),
+        fetch(STEVE_DATA_URL, {
+          method: 'HEAD',
+          headers: {
+            'If-None-Match': '', // Force fresh response
+            'Cache-Control': 'no-cache'
+          }
+        })
       ]);
+
+      // Get the ETag which contains the commit hash
+      const danielEtag = danielHeadResponse.headers.get('etag') || '';
+      const steveEtag = steveHeadResponse.headers.get('etag') || '';
+      
+      console.log('Daniel ETag:', danielEtag);
+      console.log('Steve ETag:', steveEtag);
 
       // Now fetch the actual data
       const [danielResponse, steveResponse] = await Promise.all([
-        fetch(DANIEL_DATA_URL),
-        fetch(STEVE_DATA_URL)
+        fetch(DANIEL_DATA_URL, {
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        }),
+        fetch(STEVE_DATA_URL, {
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
       ])
       
       if (!danielResponse.ok || !steveResponse.ok) {
@@ -213,29 +248,35 @@ async function fetchAndUpdateData() {
         steveResponse.json()
       ])
 
-      // Get commit timestamps
+      // Extract commit hash from ETag (format: W/"hash")
+      const danielCommit = danielEtag.replace(/W\/"([^"]+)"/, '$1');
+      const steveCommit = steveEtag.replace(/W\/"([^"]+)"/, '$1');
+
+      // Try to get commit timestamps, but don't fail if we can't
       let danielLastModified = timestamp;
       let steveLastModified = timestamp;
 
       try {
+        const [danielCommitResponse, steveCommitResponse] = await Promise.all([
+          fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${danielCommit}`),
+          fetch(`https://api.github.com/repos/danielraffel/solarshowdown-data/git/commits/${steveCommit}`)
+        ]);
+
         if (danielCommitResponse.ok) {
-          const danielCommits = await danielCommitResponse.json();
-          if (danielCommits.length > 0) {
-            danielLastModified = new Date(danielCommits[0].commit.author.date).getTime();
-          }
+          const danielCommitData = await danielCommitResponse.json();
+          danielLastModified = new Date(danielCommitData.author.date).getTime();
         }
+
         if (steveCommitResponse.ok) {
-          const steveCommits = await steveCommitResponse.json();
-          if (steveCommits.length > 0) {
-            steveLastModified = new Date(steveCommits[0].commit.author.date).getTime();
-          }
+          const steveCommitData = await steveCommitResponse.json();
+          steveLastModified = new Date(steveCommitData.author.date).getTime();
         }
       } catch (error) {
-        console.warn('Error getting commit data:', error);
+        console.warn('Failed to get commit timestamps:', error);
+        // Use response headers as fallback
+        danielLastModified = new Date(danielResponse.headers.get('last-modified')).getTime();
+        steveLastModified = new Date(steveResponse.headers.get('last-modified')).getTime();
       }
-
-      console.log('Daniel last commit:', new Date(danielLastModified).toISOString());
-      console.log('Steve last commit:', new Date(steveLastModified).toISOString());
       
       data = {
         daniel: {
@@ -269,9 +310,19 @@ async function fetchAndUpdateData() {
     if (statsContainer) statsContainer.style.opacity = "1"
   } catch (error) {
     console.error("Error fetching data:", error)
-    if (loadingIndicator) loadingIndicator.style.display = "none"
-    if (errorMessage) errorMessage.style.display = "block"
-    if (statsContainer) statsContainer.style.opacity = "0.5"
+    // Try to use cached data if available
+    const cachedData = await getCachedData()
+    if (cachedData) {
+      console.log('Using cached data as fallback')
+      updateStats(cachedData)
+      if (loadingIndicator) loadingIndicator.style.display = "none"
+      if (errorMessage) errorMessage.style.display = "none"
+      if (statsContainer) statsContainer.style.opacity = "1"
+    } else {
+      if (loadingIndicator) loadingIndicator.style.display = "none"
+      if (errorMessage) errorMessage.style.display = "block"
+      if (statsContainer) statsContainer.style.opacity = "0.5"
+    }
   } finally {
     isFetchingData = false
   }
