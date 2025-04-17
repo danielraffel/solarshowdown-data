@@ -12,7 +12,7 @@ const CACHE_KEY = 'solar-showdown-data'
 const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds
 
 // Add these constants at the top with other configs
-const GITHUB_API_BASE = "https://api.github.com/repos/danielraffel/solarshowdown-data/commits"
+const GITHUB_API_BASE = "https://api.github.com/repos/danielraffel/solarshowdown-data/contents"
 const GITHUB_HEADERS = {
   'Accept': 'application/vnd.github.v3+json'
 }
@@ -195,12 +195,12 @@ async function fetchAndUpdateData() {
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // Fetch data files and their last commit info in parallel
-      const [danielResponse, steveResponse, danielCommitResponse, steveCommitResponse] = await Promise.all([
+      // Fetch data files and their metadata in parallel
+      const [danielResponse, steveResponse, danielMetaResponse, steveMetaResponse] = await Promise.all([
         fetch(DANIEL_DATA_URL),
         fetch(STEVE_DATA_URL),
-        fetch(`${GITHUB_API_BASE}?path=daniel.json&page=1&per_page=1`, { headers: GITHUB_HEADERS }),
-        fetch(`${GITHUB_API_BASE}?path=steve.json&page=1&per_page=1`, { headers: GITHUB_HEADERS })
+        fetch(`${GITHUB_API_BASE}/daniel.json`, { headers: GITHUB_HEADERS }),
+        fetch(`${GITHUB_API_BASE}/steve.json`, { headers: GITHUB_HEADERS })
       ])
       
       if (!danielResponse.ok || !steveResponse.ok) {
@@ -212,9 +212,25 @@ async function fetchAndUpdateData() {
         steveResponse.json()
       ])
 
-      // Get commit timestamps
-      const danielCommitData = await danielCommitResponse.json()
-      const steveCommitData = await steveCommitResponse.json()
+      // Get file metadata
+      let danielLastUpdated = timestamp
+      let steveLastUpdated = timestamp
+
+      try {
+        if (danielMetaResponse.ok) {
+          const danielMeta = await danielMetaResponse.json()
+          danielLastUpdated = new Date(atob(danielMeta.content).match(/"timestamp":\s*"([^"]+)"/)?.[1] || timestamp).getTime()
+        }
+        if (steveMetaResponse.ok) {
+          const steveMeta = await steveMetaResponse.json()
+          steveLastUpdated = new Date(atob(steveMeta.content).match(/"timestamp":\s*"([^"]+)"/)?.[1] || timestamp).getTime()
+        }
+      } catch (error) {
+        console.warn('Error getting file metadata:', error)
+        // Fall back to response headers
+        danielLastUpdated = new Date(danielResponse.headers.get('last-modified') || timestamp).getTime()
+        steveLastUpdated = new Date(steveResponse.headers.get('last-modified') || timestamp).getTime()
+      }
       
       data = {
         daniel: {
@@ -224,7 +240,7 @@ async function fetchAndUpdateData() {
           imported: danielData.imported || 0,
           discharged: danielData.discharged || 0,
           maxPv: danielData.maxPv || 0,
-          lastUpdated: danielCommitData[0]?.commit?.author?.date || Date.now()
+          lastUpdated: danielLastUpdated
         },
         steve: {
           generated: steveData.generated || 0,
@@ -233,7 +249,7 @@ async function fetchAndUpdateData() {
           imported: steveData.imported || 0,
           discharged: steveData.discharged || 0,
           maxPv: steveData.maxPv || 0,
-          lastUpdated: steveCommitData[0]?.commit?.author?.date || Date.now()
+          lastUpdated: steveLastUpdated
         }
       }
 
