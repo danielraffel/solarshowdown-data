@@ -2,15 +2,8 @@
 console.log('App.js loaded - v2.3 - Using GitHub raw URLs')
 
 // Configuration
-const IS_LOCAL = window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1' || 
-                window.location.protocol === 'file:';
-
-// Update the data URLs to work both locally and on GitHub Pages
-const BASE_URL = IS_LOCAL ? '.' : 'https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main';
-const GITHUB_API_COMMITS = "https://api.github.com/repos/danielraffel/solarshowdown-data/commits";
-const DANIEL_DATA_URL = `${BASE_URL}/daniel.json${IS_LOCAL ? '' : '?no-cache=' + Date.now()}`;
-const STEVE_DATA_URL = `${BASE_URL}/steve.json${IS_LOCAL ? '' : '?no-cache=' + Date.now()}`;
+const DANIEL_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/daniel.json"
+const STEVE_DATA_URL = "https://raw.githubusercontent.com/danielraffel/solarshowdown-data/main/steve.json"
 // Use a CORS proxy to avoid cross-origin issues
 const CORS_PROXY = "https://corsproxy.io/?" // Alternative: "https://cors-anywhere.herokuapp.com/"
 // Set to true for local testing, false when GitHub data should be used
@@ -53,7 +46,7 @@ const energyVampireEl = document.getElementById("energy-vampire")
 const batteryBossEl = document.getElementById("battery-boss")
 const peakPerformerEl = document.getElementById("peak-performer")
 
-// Update mock data to include timestamps
+// Mock data for development (when API is not available)
 const mockData = {
   daily: {
     daniel: {
@@ -63,7 +56,6 @@ const mockData = {
       imported: 1.2,
       discharged: 2.1,
       maxPv: 5.5,
-      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 19.5,
@@ -72,7 +64,6 @@ const mockData = {
       imported: 1.5,
       discharged: 1.8,
       maxPv: 4.9,
-      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   weekly: {
@@ -83,7 +74,6 @@ const mockData = {
       imported: 7.5,
       discharged: 12.2,
       maxPv: 7.8,
-      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 156.2,
@@ -92,7 +82,6 @@ const mockData = {
       imported: 8.1,
       discharged: 10.5,
       maxPv: 7.2,
-      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   monthly: {
@@ -103,7 +92,6 @@ const mockData = {
       imported: 32.1,
       discharged: 48.7,
       maxPv: 9.2,
-      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 602.8,
@@ -112,7 +100,6 @@ const mockData = {
       imported: 35.4,
       discharged: 44.3,
       maxPv: 8.7,
-      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
   yearly: {
@@ -123,7 +110,6 @@ const mockData = {
       imported: 410.2,
       discharged: 590.1,
       maxPv: 12.3,
-      lastUpdated: new Date("2024-04-16T17:00:00-07:00").getTime()
     },
     steve: {
       generated: 7105.3,
@@ -132,7 +118,6 @@ const mockData = {
       imported: 430.7,
       discharged: 570.8,
       maxPv: 11.8,
-      lastUpdated: new Date("2024-04-16T17:01:00-07:00").getTime()
     },
   },
 }
@@ -170,35 +155,9 @@ function init() {
   fetchAndUpdateData()
 }
 
-// Update the formatPSTTime function to handle timezone conversion correctly
-function formatPSTTime(timestamp) {
-  // Create a date object in UTC
-  const date = new Date(timestamp);
-  console.log('Original timestamp:', timestamp);
-  console.log('Date object:', date.toISOString());
-  
-  // Format in PST/PDT
-  const options = {
-    timeZone: 'America/Los_Angeles',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  };
-  const pstTime = date.toLocaleString('en-US', options);
-  console.log('Formatted PST time:', pstTime);
-  return pstTime + ' PST';
-}
-
-// Update the fallback timestamps
-const FALLBACK_TIMESTAMPS = {
-  daniel: new Date('2025-04-16T17:51:00-07:00').getTime(), // 5:51 PM PDT
-  steve: new Date('2025-04-16T18:01:00-07:00').getTime()   // 6:01 PM PDT
-};
-
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
+  // Prevent multiple concurrent fetches
   if (isFetchingData) {
     console.log('Fetch already in progress, skipping')
     return
@@ -212,144 +171,29 @@ async function fetchAndUpdateData() {
   try {
     let data
     const timestamp = Date.now()
+    console.log('Starting fresh data fetch at:', new Date(timestamp).toISOString())
 
     if (MOCK_MODE) {
+      // Use mock data for development
       await simulateNetworkDelay(500)
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // First fetch the file data
-      console.log('Fetching data from:', { 
-        daniel: DANIEL_DATA_URL, 
-        steve: STEVE_DATA_URL 
-      });
-
+      // Fetch both files in parallel
       const [danielResponse, steveResponse] = await Promise.all([
         fetch(DANIEL_DATA_URL),
         fetch(STEVE_DATA_URL)
-      ]);
-
+      ])
+      
       if (!danielResponse.ok || !steveResponse.ok) {
-        throw new Error("Failed to fetch data files");
+        throw new Error("Failed to fetch data from GitHub")
       }
-
+      
       const [danielData, steveData] = await Promise.all([
         danielResponse.json(),
         steveResponse.json()
-      ]);
-
-      console.log('Successfully fetched data files:', { 
-        daniel: danielData, 
-        steve: steveData 
-      });
-
-      // Get the last commit for each file to find the timestamp
-      let danielTimestamp = FALLBACK_TIMESTAMPS.daniel; // Use fallback timestamp instead of page load time
-      let steveTimestamp = FALLBACK_TIMESTAMPS.steve;   // Use fallback timestamp instead of page load time
-
-      if (!IS_LOCAL) {
-        try {
-          console.log('Environment:', {
-            hostname: window.location.hostname,
-            protocol: window.location.protocol,
-            isLocal: IS_LOCAL
-          });
-          
-          console.log('Attempting to fetch GitHub commit data...');
-          
-          // Try with fetch API first
-          const danielCommitsUrl = `${GITHUB_API_COMMITS}?path=daniel.json&page=1&per_page=1`;
-          const steveCommitsUrl = `${GITHUB_API_COMMITS}?path=steve.json&page=1&per_page=1`;
-          
-          console.log('GitHub API URLs:', {
-            daniel: danielCommitsUrl,
-            steve: steveCommitsUrl
-          });
-
-          // Use separate try/catch blocks to handle each API call independently
-          try {
-            const danielCommitsResponse = await fetch(danielCommitsUrl);
-            console.log('Daniel commit API response:', {
-              status: danielCommitsResponse.status,
-              headers: Object.fromEntries(danielCommitsResponse.headers.entries())
-            });
-            
-            if (danielCommitsResponse.ok) {
-              const danielCommits = await danielCommitsResponse.json();
-              console.log('Daniel commit data:', danielCommits);
-              
-              if (danielCommits.length > 0 && danielCommits[0].commit?.author?.date) {
-                const commitDate = danielCommits[0].commit.author.date;
-                console.log('Daniel raw commit date:', commitDate);
-                danielTimestamp = new Date(commitDate).getTime();
-                console.log('Daniel parsed timestamp:', {
-                  iso: new Date(danielTimestamp).toISOString(),
-                  pst: new Date(danielTimestamp).toLocaleString('en-US', {
-                    timeZone: 'America/Los_Angeles'
-                  })
-                });
-              } else {
-                console.warn('No commit data found for daniel.json');
-              }
-            } else {
-              const errorText = await danielCommitsResponse.text();
-              console.warn('Failed to get daniel commit data:', {
-                status: danielCommitsResponse.status,
-                error: errorText
-              });
-            }
-          } catch (danielError) {
-            console.error('Error fetching daniel commit data:', danielError);
-          }
-
-          try {
-            const steveCommitsResponse = await fetch(steveCommitsUrl);
-            console.log('Steve commit API response:', {
-              status: steveCommitsResponse.status,
-              headers: Object.fromEntries(steveCommitsResponse.headers.entries())
-            });
-            
-            if (steveCommitsResponse.ok) {
-              const steveCommits = await steveCommitsResponse.json();
-              console.log('Steve commit data:', steveCommits);
-              
-              if (steveCommits.length > 0 && steveCommits[0].commit?.author?.date) {
-                const commitDate = steveCommits[0].commit.author.date;
-                console.log('Steve raw commit date:', commitDate);
-                steveTimestamp = new Date(commitDate).getTime();
-                console.log('Steve parsed timestamp:', {
-                  iso: new Date(steveTimestamp).toISOString(),
-                  pst: new Date(steveTimestamp).toLocaleString('en-US', {
-                    timeZone: 'America/Los_Angeles'
-                  })
-                });
-              } else {
-                console.warn('No commit data found for steve.json');
-              }
-            } else {
-              const errorText = await steveCommitsResponse.text();
-              console.warn('Failed to get steve commit data:', {
-                status: steveCommitsResponse.status,
-                error: errorText
-              });
-            }
-          } catch (steveError) {
-            console.error('Error fetching steve commit data:', steveError);
-          }
-          
-        } catch (error) {
-          console.warn('Error with GitHub API, using fallback timestamps:', error);
-        }
-      } else {
-        console.log('Running locally, using fallback timestamps');
-      }
-
-      console.log('Final timestamps to use:', {
-        daniel: new Date(danielTimestamp).toISOString(),
-        steve: new Date(steveTimestamp).toISOString()
-      });
-
-      // Construct the data object
+      ])
+      
       data = {
         daniel: {
           generated: danielData.generated || 0,
@@ -357,8 +201,7 @@ async function fetchAndUpdateData() {
           soldBack: danielData.exported || 0,
           imported: danielData.imported || 0,
           discharged: danielData.discharged || 0,
-          maxPv: danielData.maxPv || 0,
-          lastUpdated: danielTimestamp
+          maxPv: danielData.maxPv || 0
         },
         steve: {
           generated: steveData.generated || 0,
@@ -366,39 +209,29 @@ async function fetchAndUpdateData() {
           soldBack: steveData.exported || 0,
           imported: steveData.imported || 0,
           discharged: steveData.discharged || 0,
-          maxPv: steveData.maxPv || 0,
-          lastUpdated: steveTimestamp
+          maxPv: steveData.maxPv || 0
         }
-      };
+      }
 
-      console.log('Final data object with timestamps:', {
-        daniel: new Date(data.daniel.lastUpdated).toISOString(),
-        steve: new Date(data.steve.lastUpdated).toISOString()
-      });
-
-      await cacheData(data, timestamp);
+      console.log('Fetched fresh data:', data)
+      // Cache the fetched data with timestamp
+      await cacheData(data, timestamp)
     }
 
-    updateStats(data, timestamp);
-    if (loadingIndicator) loadingIndicator.style.display = "none";
-    if (errorMessage) errorMessage.style.display = "none";
-    if (statsContainer) statsContainer.style.opacity = "1";
+    // Update the UI with the fetched data and timestamp
+    updateStats(data, timestamp)
+
+    // Hide loading state
+    if (loadingIndicator) loadingIndicator.style.display = "none"
+    if (errorMessage) errorMessage.style.display = "none"
+    if (statsContainer) statsContainer.style.opacity = "1"
   } catch (error) {
-    console.error("Error fetching data:", error);
-    const cachedData = await getCachedData();
-    if (cachedData) {
-      console.log('Using cached data as fallback');
-      updateStats(cachedData);
-      if (loadingIndicator) loadingIndicator.style.display = "none";
-      if (errorMessage) errorMessage.style.display = "none";
-      if (statsContainer) statsContainer.style.opacity = "1";
-    } else {
-      if (loadingIndicator) loadingIndicator.style.display = "none";
-      if (errorMessage) errorMessage.style.display = "block";
-      if (statsContainer) statsContainer.style.opacity = "0.5";
-    }
+    console.error("Error fetching data:", error)
+    if (loadingIndicator) loadingIndicator.style.display = "none"
+    if (errorMessage) errorMessage.style.display = "block"
+    if (statsContainer) statsContainer.style.opacity = "0.5"
   } finally {
-    isFetchingData = false;
+    isFetchingData = false
   }
 }
 
@@ -465,10 +298,6 @@ function updateStats(data, timestamp = Date.now()) {
   danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
   danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
   danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
-  const danielLastUpdatedEl = document.getElementById("daniel-last-updated")
-  if (danielLastUpdatedEl) {
-    danielLastUpdatedEl.textContent = `Updated ${formatPSTTime(data.daniel.lastUpdated)}`
-  }
 
   const danielImportedEl = document.getElementById("daniel-imported")
   if (danielImportedEl) danielImportedEl.textContent = `${data.daniel.imported.toFixed(1)} kWh`
@@ -483,10 +312,6 @@ function updateStats(data, timestamp = Date.now()) {
   steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
   steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
   steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
-  const steveLastUpdatedEl = document.getElementById("steve-last-updated")
-  if (steveLastUpdatedEl) {
-    steveLastUpdatedEl.textContent = `Updated ${formatPSTTime(data.steve.lastUpdated)}`
-  }
 
   const steveImportedEl = document.getElementById("steve-imported")
   if (steveImportedEl) steveImportedEl.textContent = `${data.steve.imported.toFixed(1)} kWh`
