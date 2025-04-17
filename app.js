@@ -11,6 +11,12 @@ const MOCK_MODE = false
 const CACHE_KEY = 'solar-showdown-data'
 const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds
 
+// Add these constants at the top with other configs
+const GITHUB_API_BASE = "https://api.github.com/repos/danielraffel/solarshowdown-data/commits"
+const GITHUB_HEADERS = {
+  'Accept': 'application/vnd.github.v3+json'
+}
+
 // DOM Elements
 const loadingIndicator = document.getElementById("loading")
 const errorMessage = document.getElementById("error-message")
@@ -155,9 +161,21 @@ function init() {
   fetchAndUpdateData()
 }
 
+// Add this helper function at the top with other functions
+function formatPSTTime(timestamp) {
+  const options = {
+    timeZone: 'America/Los_Angeles',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true
+  };
+  return new Date(timestamp).toLocaleString('en-US', options) + ' PST';
+}
+
 // Fetch data from GitHub repositories or use mock data
 async function fetchAndUpdateData() {
-  // Prevent multiple concurrent fetches
   if (isFetchingData) {
     console.log('Fetch already in progress, skipping')
     return
@@ -171,28 +189,32 @@ async function fetchAndUpdateData() {
   try {
     let data
     const timestamp = Date.now()
-    console.log('Starting fresh data fetch at:', new Date(timestamp).toISOString())
 
     if (MOCK_MODE) {
-      // Use mock data for development
       await simulateNetworkDelay(500)
       data = mockData.daily
       console.log('Using mock data:', data)
     } else {
-      // Fetch both files in parallel
-      const [danielResponse, steveResponse] = await Promise.all([
+      // Fetch data files and their last commit info in parallel
+      const [danielResponse, steveResponse, danielCommitResponse, steveCommitResponse] = await Promise.all([
         fetch(DANIEL_DATA_URL),
-        fetch(STEVE_DATA_URL)
+        fetch(STEVE_DATA_URL),
+        fetch(`${GITHUB_API_BASE}?path=daniel.json&page=1&per_page=1`, { headers: GITHUB_HEADERS }),
+        fetch(`${GITHUB_API_BASE}?path=steve.json&page=1&per_page=1`, { headers: GITHUB_HEADERS })
       ])
       
       if (!danielResponse.ok || !steveResponse.ok) {
         throw new Error("Failed to fetch data from GitHub")
       }
-      
+
       const [danielData, steveData] = await Promise.all([
         danielResponse.json(),
         steveResponse.json()
       ])
+
+      // Get commit timestamps
+      const danielCommitData = await danielCommitResponse.json()
+      const steveCommitData = await steveCommitResponse.json()
       
       data = {
         daniel: {
@@ -201,7 +223,8 @@ async function fetchAndUpdateData() {
           soldBack: danielData.exported || 0,
           imported: danielData.imported || 0,
           discharged: danielData.discharged || 0,
-          maxPv: danielData.maxPv || 0
+          maxPv: danielData.maxPv || 0,
+          lastUpdated: danielCommitData[0]?.commit?.author?.date || Date.now()
         },
         steve: {
           generated: steveData.generated || 0,
@@ -209,19 +232,17 @@ async function fetchAndUpdateData() {
           soldBack: steveData.exported || 0,
           imported: steveData.imported || 0,
           discharged: steveData.discharged || 0,
-          maxPv: steveData.maxPv || 0
+          maxPv: steveData.maxPv || 0,
+          lastUpdated: steveCommitData[0]?.commit?.author?.date || Date.now()
         }
       }
 
       console.log('Fetched fresh data:', data)
-      // Cache the fetched data with timestamp
       await cacheData(data, timestamp)
     }
 
-    // Update the UI with the fetched data and timestamp
     updateStats(data, timestamp)
 
-    // Hide loading state
     if (loadingIndicator) loadingIndicator.style.display = "none"
     if (errorMessage) errorMessage.style.display = "none"
     if (statsContainer) statsContainer.style.opacity = "1"
@@ -298,6 +319,10 @@ function updateStats(data, timestamp = Date.now()) {
   danielConsumedEl.textContent = `${data.daniel.consumed.toFixed(1)} kWh`
   danielSoldEl.textContent = `${data.daniel.soldBack.toFixed(1)} kWh`
   danielNetEl.textContent = `${danielNet.toFixed(1)} kWh`
+  const danielLastUpdatedEl = document.getElementById("daniel-last-updated")
+  if (danielLastUpdatedEl) {
+    danielLastUpdatedEl.textContent = `Updated ${formatPSTTime(data.daniel.lastUpdated)}`
+  }
 
   const danielImportedEl = document.getElementById("daniel-imported")
   if (danielImportedEl) danielImportedEl.textContent = `${data.daniel.imported.toFixed(1)} kWh`
@@ -312,6 +337,10 @@ function updateStats(data, timestamp = Date.now()) {
   steveConsumedEl.textContent = `${data.steve.consumed.toFixed(1)} kWh`
   steveSoldEl.textContent = `${data.steve.soldBack.toFixed(1)} kWh`
   steveNetEl.textContent = `${steveNet.toFixed(1)} kWh`
+  const steveLastUpdatedEl = document.getElementById("steve-last-updated")
+  if (steveLastUpdatedEl) {
+    steveLastUpdatedEl.textContent = `Updated ${formatPSTTime(data.steve.lastUpdated)}`
+  }
 
   const steveImportedEl = document.getElementById("steve-imported")
   if (steveImportedEl) steveImportedEl.textContent = `${data.steve.imported.toFixed(1)} kWh`

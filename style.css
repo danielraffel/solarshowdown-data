@@ -310,6 +310,20 @@ main {
   grid-column: span 2;
   background-color: rgba(245, 197, 24, 0.1);
   font-weight: bold;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.last-updated {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  bottom: -24px;
+  left: 0;
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
 }
 
 .stat-label {
@@ -626,5 +640,12 @@ footer a:hover {
   font-weight: bold;
   margin-bottom: 20px;
   color: #2c3e50;
+}
+
+.last-updated {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 2px;
+  font-style: italic;
 }
 
