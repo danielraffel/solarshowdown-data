@@ -1,6 +1,6 @@
 # ☀️ Solar Showdown
 
-A daily competition tracking solar energy production and consumption between Daniel and Steve! Who will be today's solar champion? 
+A daily competition tracking solar energy production and consumption between Daniel and Steve! Who will be today's solar champion? [Announcement blog post](https://danielraffel.me/2025/04/16/solar-showdown-a-friendly-energy-face-off/).
 
 ## 🎮 What is Solar Showdown?
 
