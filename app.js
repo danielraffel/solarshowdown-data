@@ -377,24 +377,29 @@ function determineWinner(danielNet, steveNet) {
 
 // Update bonus categories
 function updateBonusCategories(data) {
-  // Solar MVP
+  // Solar MVP - Most Generated
   solarMvpEl.textContent = 
+    data.daniel.generated === data.steve.generated ? 'Tied' :
     data.daniel.generated > data.steve.generated ? 'Daniel' : 'Steve'
     
-  // Grid Hustler
+  // Grid Hustler - Most Sold Back
   gridHustlerEl.textContent = 
+    data.daniel.soldBack === data.steve.soldBack ? 'Tied' :
     data.daniel.soldBack > data.steve.soldBack ? 'Daniel' : 'Steve'
     
-  // Energy Vampire
+  // Energy Vampire - Most Consumed
   energyVampireEl.textContent = 
+    data.daniel.consumed === data.steve.consumed ? 'Tied' :
     data.daniel.consumed > data.steve.consumed ? 'Daniel' : 'Steve'
     
-  // Battery Boss
+  // Battery Boss - Most Discharged
   batteryBossEl.textContent = 
+    data.daniel.discharged === data.steve.discharged ? 'Tied' :
     data.daniel.discharged > data.steve.discharged ? 'Daniel' : 'Steve'
     
-  // Peak Performer
+  // Peak Performer - Highest Max PV
   peakPerformerEl.textContent = 
+    data.daniel.maxPv === data.steve.maxPv ? 'Tied' :
     data.daniel.maxPv > data.steve.maxPv ? 'Daniel' : 'Steve'
 }
 
