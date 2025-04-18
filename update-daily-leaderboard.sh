@@ -7,6 +7,9 @@ SCRIPT="leaderboard/solar-summary.js"
 # Navigate to the repository
 cd "$REPO_PATH" || exit 1
 
+git branch --set-upstream-to=origin/main main
+git pull origin main
+
 # Configure Git identity if not already set
 if [[ -z $(git config user.email) ]]; then
     git config user.email "placeholder@example.com"
