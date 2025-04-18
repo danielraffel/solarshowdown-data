@@ -1,0 +1,537 @@
+:root {
+  --color-bg: #f9f9f9;
+  --color-text: #333;
+  --color-primary: #f5c518;
+  --color-secondary: #4a90e2;
+  --color-accent: #50c878;
+  --color-card-bg: #fff;
+  --color-card-border: #eaeaea;
+  --color-daniel: #4a90e2;
+  --color-steve: #50c878;
+  --color-vs: #f5c518;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #000000;
+    --color-text: #ffffff;
+    --color-card-bg: #1c1c1e;
+    --color-card-border: #2c2c2e;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.container, .leaderboard-container {
+  max-width: 1136px;
+  margin: 0 auto;
+  padding: 2rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  h1 {
+    color: #ffffff;
+  }
+}
+
+.championship-stats {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.championship-stats h2 {
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+}
+
+.champion-counts {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.daniel-stats, .steve-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.daniel-stats .name {
+  color: var(--color-daniel);
+}
+
+.steve-stats .name {
+  color: var(--color-steve);
+}
+
+.vs {
+  font-size: 1.5rem;
+  color: var(--color-vs);
+  font-weight: bold;
+}
+
+.count {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.overall-champion {
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.calendar-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 1.2rem;
+  margin-top: 1.2rem;
+}
+
+.calendar-navigation button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+
+.calendar-navigation button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.calendar-navigation button:not(:disabled):hover {
+  background-color: var(--color-card-bg);
+}
+
+.calendar {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 1.2rem 2rem 1.2rem 2rem;
+  box-shadow: var(--shadow);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto 0.5rem auto;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  z-index: 1;
+}
+
+.calendar-day .date {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-bottom: 0.2rem;
+}
+
+.calendar-day .winner {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.calendar-day.daniel {
+  border-color: var(--color-daniel);
+  background-color: rgba(74, 144, 226, 0.1);
+}
+
+.calendar-day.steve {
+  border-color: var(--color-steve);
+  background-color: rgba(80, 200, 120, 0.1);
+}
+
+.calendar-day.tie {
+  border-color: var(--color-vs);
+  background-color: rgba(245, 197, 24, 0.1);
+}
+
+.nav-link-container {
+  width: 100%;
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: var(--color-card-bg);
+  padding: 1.2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-link {
+    background: #1c1c1e;
+    color: #fff;
+  }
+}
+
+footer .nav-link {
+  display: inline;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+  margin: 0;
+  min-width: 0;
+  font-size: 1rem;
+}
+
+footer .nav-link:hover {
+  text-decoration: underline;
+  transform: none;
+  box-shadow: none;
+}
+
+.day-details {
+  position: fixed;
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 1000;
+  max-width: 500px;
+  min-width: 300px;
+  border: 1px solid var(--color-card-border);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.day-details.visible {
+  display: block;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.details-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.details-header strong {
+  display: block;
+  font-size: 1.2em;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.winner-badge {
+  font-size: 1.1em;
+}
+
+.details-section {
+  margin-top: 1.5rem;
+}
+
+.details-section h3 {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  font-size: 1.1em;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.stats-column {
+  font-size: 0.9em;
+  line-height: 1.8;
+}
+
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-card-border);
+  color: #666;
+  background: none;
+  position: static;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  box-shadow: none;
+}
+
+.footer-separator {
+  border: none;
+  border-top: 1px solid var(--color-card-border);
+  margin: 2rem 0 1.5rem 0;
+  width: 100%;
+}
+
+footer a {
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Modal styles for mobile */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal.visible {
+  display: flex;
+  opacity: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-modal {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  .calendar {
+    padding: 0.5rem;
+    margin-bottom: 4rem;
+    font-size: 0.8rem;
+  }
+
+  .calendar-grid {
+    gap: 0.25rem;
+  }
+
+  .calendar-day {
+    padding: 0.15rem;
+    min-width: 0;
+    font-size: 0.7rem;
+  }
+
+  .calendar-day .date {
+    font-size: 0.7rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .calendar-day .winner {
+    font-size: 0.8rem;
+  }
+
+  .calendar-header {
+    font-size: 0.8rem;
+  }
+
+  .champion-counts {
+    gap: 1rem;
+  }
+
+  .count {
+    font-size: 2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .stats-column:first-child {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-card-border);
+  }
+
+  footer {
+    position: static !important;
+    background: none !important;
+    box-shadow: none !important;
+    margin: 2rem 0 0 0;
+    padding-bottom: 0;
+  }
+
+  /* Hide desktop popup on mobile */
+  .day-details {
+    display: none !important;
+  }
+
+  .nav-link {
+    min-width: 0;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+.nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0.5em;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 0.95em;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.stats-table th, .stats-table td {
+  padding: 0.18em 0.35em;
+  text-align: center;
+  border-bottom: 1px solid #f2f2f2;
+}
+.stats-table th + th, .stats-table td + td {
+  border-left: 1px solid #ececec;
+}
+.stats-table th:first-child, .stats-table td:first-child {
+  text-align: left;
+  border-left: none;
+}
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .stats-table {
+    background: #18181a;
+    border: 1px solid #333;
+    color: #fff;
+  }
+  .stats-table th, .stats-table td {
+    border-bottom: 1px solid #222;
+  }
+  .stats-table th + th, .stats-table td + td {
+    border-left: 1px solid #222;
+  }
+}

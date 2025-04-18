@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solar Showdown Leaderboard</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>☀️ Leaderboard</h1>
+    </header>
+    
+    <div class="championship-stats">
+      <h2 style="text-align:center;">Total Daily Championships</h2>
+      <div class="champion-counts">
+        <div class="daniel-stats">
+          <span class="name">Daniel</span>
+          <span class="count" id="daniel-wins">0</span>
+        </div>
+        <div class="vs">VS</div>
+        <div class="steve-stats">
+          <span class="name">Steve</span>
+          <span class="count" id="steve-wins">0</span>
+        </div>
+      </div>
+      <div class="overall-champion" style="text-align:center;">
+        <span id="overall-champion">-</span>
+      </div>
+    </div>
+
+    <div id="monthly-champion" style="text-align:center; font-size:1.1em; margin: 1em 0 0.5em 0;"></div>
+
+    <main>
+      <div class="calendar-navigation">
+        <button id="prev-month">←</button>
+        <h2 id="current-month">April 2024</h2>
+        <button id="next-month">→</button>
+      </div>
+
+      <div class="calendar" id="calendar">
+        <div class="calendar-header">
+          <div>S</div>
+          <div>M</div>
+          <div>T</div>
+          <div>W</div>
+          <div>T</div>
+          <div>F</div>
+          <div>S</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- Calendar days will be inserted here by JavaScript -->
+        </div>
+      </div>
+      
+      <div class="nav-link-container">
+        <a href="/" class="nav-link">📅 View Today's Champion</a>
+      </div>
+
+      <div class="day-details" id="day-details">
+        <!-- Day details will be shown here on hover/tap -->
+      </div>
+
+      <!-- Modal for mobile -->
+      <div class="modal" id="details-modal">
+        <div class="modal-content">
+          <button class="close-modal">×</button>
+          <div class="modal-body"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="https://github.com/danielraffel/solarshowdown-data" target="_blank">About this Site</a></p>
+    </footer>
+  </div>
+  <script src="leaderboard.js"></script>
+</body>
+</html>

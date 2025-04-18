@@ -56,6 +56,11 @@
   body .stats-card {
     background-color: #1c1c1e;
   }
+
+  .nav-link {
+    background: #1c1c1e;
+    color: #fff;
+  }
 }
 
 * {
@@ -71,10 +76,12 @@ body {
   line-height: 1.6;
 }
 
-.container {
-  max-width: 1200px;
+.container, .leaderboard-container {
+  max-width: 1136px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 header {
@@ -82,10 +89,11 @@ header {
   margin-bottom: 2rem;
 }
 
-h1 {
+h1, .solar-showdown-title {
   font-size: 2.5rem;
-  margin-bottom: 0.5rem;
   color: var(--color-text);
+  margin-bottom: 2rem;
+  white-space: nowrap;
 }
 
 .subtitle {
@@ -107,16 +115,16 @@ h1 {
 
 .high-scores {
   font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 1.5rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: var(--radius);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 0.75rem;
-  max-width: 100%;
+  width: 100%;
 }
 
 .high-scores span {
@@ -588,8 +596,9 @@ footer a:hover {
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 10px;
+  .container,
+  .leaderboard-container {
+    padding: 1rem;
   }
   
   .stats-grid {
@@ -678,11 +687,8 @@ footer a:hover {
 }
 
 .champion {
-  text-align: center;
-  font-size: 1.2em;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #2c3e50;
+  margin: 2rem 0;
+  font-size: 1.2rem;
 }
 
 .last-updated {
@@ -690,5 +696,139 @@ footer a:hover {
   color: #666;
   margin-top: 2px;
   font-style: italic;
+}
+
+.leaderboard-link {
+  display: block;
+  text-align: center;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  transition: var(--transition);
+  margin: 0.5rem auto 1.5rem;
+  font-size: 0.9em;
+  width: fit-content;
+}
+
+.leaderboard-link:hover {
+  background-color: var(--color-card-bg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Navigation links */
+.nav-link-container {
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: var(--color-card-bg);
+  padding: 1.2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+footer .nav-link {
+  display: inline;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+  width: auto;
+}
+
+footer .nav-link:hover {
+  text-decoration: underline;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-link {
+    background: #1c1c1e;
+    color: #fff;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-link {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .container,
+  .leaderboard-container {
+    padding: 1rem;
+  }
+
+  .high-scores {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .championship-stats {
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+}
+
+.championship-stats {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  margin: 2rem 0;
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-link,
+  .high-scores,
+  .championship-stats {
+    background: #1c1c1e;
+    color: #fff;
+  }
+
+  .high-scores {
+    color: #9d9c9c;
+  }
+}
+
+/* Calendar styles */
+.calendar {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+.calendar-grid {
+  width: 100%;
+  box-sizing: border-box;
 }
 
