@@ -19,7 +19,8 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 
 - **Frontend**: Vanilla JavaScript and CSS for a clean, responsive dashboard
 - **Backend**: Uses [solarshowdown-api](https://github.com/skrul/solarshowdown-api) to fetch metrics from InfluxDB
-- **Data**: Daily JSON files tracking solar performance metrics
+- **Data**: Daily JSON files tracking solar performance metrics and a leaderboard section summarizing top performers
+- **Scripts**: `update-daily-leaderboard.sh` script generates/upgrades the leaderboard data
 
 ## 🌟 Features
 
@@ -30,6 +31,7 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 - Responsive design
 - Emoji indicators for achievements
 - Day / Night mode
+- Leaderboard section highlighting daily and all-time top performers
 
 ## 🏆 Bonus Categories
 
@@ -51,7 +53,13 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 
 ## 📊 Data Updates
 
-The dashboard updates automatically throughout the day, pulling fresh data from the solar systems. A new champion is crowned daily based on overall performance.
+The dashboard updates automatically throughout the day, pulling fresh data from the solar systems. Leaderboard standings are generated nightly by a scheduled script (cron job at 11:55 PM), which calls `update-daily-leaderboard.sh` to update `daily-leaderboard.json`. A new champion is crowned daily based on overall performance.
+
+**Sample cron job:**
+
+```
+55 23 * * * /opt/solarshowdown-data/update-daily-leaderboard.sh >> /opt/solarshowdown-data/update-leaderboard.log 2>&1
+```
 
 ## 🎨 Preview
 
