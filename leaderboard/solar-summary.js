@@ -70,14 +70,16 @@ async function main() {
       fetchJson(urls.steve),
     ]);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }).split(',')[0];
+    const [month, day, year] = today.split('/');
+    const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     const danielNet = calculateNet(danielData);
     const steveNet = calculateNet(steveData);
     const winner = danielNet === steveNet ? 'Tie' : danielNet > steveNet ? 'Daniel' : 'Steve';
     const highScores = calculateHighScores(danielData, steveData);
 
     const dailyResult = {
-      date: today,
+      date: formattedDate,
       daniel: {
         ...danielData,
         net: danielNet,
