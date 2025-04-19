@@ -1,0 +1,17 @@
+branch 'main' set up to track 'origin/main'.
+From github.com:danielraffel/solarshowdown-data
+ * branch            main       -> FETCH_HEAD
+   80c7326..8833e9f  main       -> origin/main
+Updating 80c7326..8833e9f
+Fast-forward
+ stats.png | Bin 0 -> 2312964 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 stats.png
+Saved Solar Showdown result for 2025-04-18
+[main 4a1e252] Update daily leaderboard 2025-04-18 23:55
+ 1 file changed, 70 insertions(+), 1 deletion(-)
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+To github.com:danielraffel/solarshowdown-data.git
+   8833e9f..4a1e252  main -> main
+Daily leaderboard updated successfully at 2025-04-18 23:55
