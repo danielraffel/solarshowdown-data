@@ -22,47 +22,6 @@ function calculateNet({ generated, consumed, exported }) {
   return generated + exported - consumed;
 }
 
-function determineHighScores(danielData, steveData) {
-  return {
-    generatedMore: {
-      winner: danielData.generated === steveData.generated ? 'Tied' :
-              danielData.generated > steveData.generated ? 'Daniel' : 'Steve',
-      value: Math.max(danielData.generated, steveData.generated),
-      difference: Math.abs(danielData.generated - steveData.generated)
-    },
-    consumedLess: {
-      winner: danielData.consumed === steveData.consumed ? 'Tied' :
-              danielData.consumed < steveData.consumed ? 'Daniel' : 'Steve',
-      value: Math.min(danielData.consumed, steveData.consumed),
-      difference: Math.abs(danielData.consumed - steveData.consumed)
-    },
-    soldMore: {
-      winner: danielData.exported === steveData.exported ? 'Tied' :
-              danielData.exported > steveData.exported ? 'Daniel' : 'Steve',
-      value: Math.max(danielData.exported, steveData.exported),
-      difference: Math.abs(danielData.exported - steveData.exported)
-    },
-    importedLess: {
-      winner: danielData.imported === steveData.imported ? 'Tied' :
-              danielData.imported < steveData.imported ? 'Daniel' : 'Steve',
-      value: Math.min(danielData.imported, steveData.imported),
-      difference: Math.abs(danielData.imported - steveData.imported)
-    },
-    dischargedLess: {
-      winner: danielData.discharged === steveData.discharged ? 'Tied' :
-              danielData.discharged < steveData.discharged ? 'Daniel' : 'Steve',
-      value: Math.min(danielData.discharged, steveData.discharged),
-      difference: Math.abs(danielData.discharged - steveData.discharged)
-    },
-    highestMaxPv: {
-      winner: danielData.maxPv === steveData.maxPv ? 'Tied' :
-              danielData.maxPv > steveData.maxPv ? 'Daniel' : 'Steve',
-      value: Math.max(danielData.maxPv, steveData.maxPv),
-      difference: Math.abs(danielData.maxPv - steveData.maxPv)
-    }
-  };
-}
-
 async function main() {
   try {
     const [danielData, steveData] = await Promise.all([
@@ -70,9 +29,11 @@ async function main() {
       fetchJson(urls.steve),
     ]);
 
-    const today = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }).split(',')[0];
-    const [month, day, year] = today.split('/');
+    // Format date consistently (YYYY-MM-DD)
+    const laDate = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+    const [month, day, year] = laDate.split(',')[0].split('/');
     const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
     const danielNet = calculateNet(danielData);
     const steveNet = calculateNet(steveData);
     const winner = danielNet === steveNet ? 'Tie' : danielNet > steveNet ? 'Daniel' : 'Steve';
@@ -120,20 +81,24 @@ async function main() {
       leaderboard = JSON.parse(existing);
     }
 
-    // Check if we already have an entry for today
-    const todayIndex = leaderboard.findIndex(entry => entry.date === today);
-    if (todayIndex !== -1) {
-      leaderboard[todayIndex] = dailyResult;
+    // Check using formatted date
+    const existingIndex = leaderboard.findIndex(entry => entry.date === formattedDate);
+    if (existingIndex !== -1) {
+      leaderboard[existingIndex] = dailyResult;
     } else {
       leaderboard.push(dailyResult);
     }
 
-    fs.writeFileSync(filePath, JSON.stringify(leaderboard, null, 2));
-    console.log(`Saved Solar Showdown result for ${today}`);
+    // Optional: sort by date ascending
+    leaderboard.sort((a, b) => a.date.localeCompare(b.date));
+
+    fs.writeFileSync(filePath, JSON.stringify(leaderboard, null, 2) + '\n');
+    console.log(`✅ Saved Solar Showdown result for ${formattedDate}`);
   } catch (error) {
-    console.error('Failed to fetch or save data:', error);
+    console.error('❌ Failed to fetch or save data:', error);
     process.exit(1);
   }
 }
 
 main();
+
