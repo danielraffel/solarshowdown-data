@@ -15,3 +15,12 @@ error: Please commit or stash them.
 To github.com:danielraffel/solarshowdown-data.git
    8833e9f..4a1e252  main -> main
 Daily leaderboard updated successfully at 2025-04-18 23:55
+branch 'main' set up to track 'origin/main'.
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+Saved Solar Showdown result for 4/19/2025
+[main 6ae20af] Update daily leaderboard 2025-04-19 23:55
+ 1 file changed, 68 insertions(+)
+To github.com:danielraffel/solarshowdown-data.git
+   4239b94..6ae20af  main -> main
+Daily leaderboard updated successfully
