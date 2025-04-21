@@ -138,36 +138,36 @@
   {
     "date": "2025-04-20",
     "daniel": {
-      "generated": 50.29999923706055,
-      "consumed": 28.19999847561121,
-      "exported": 12.600000381469727,
+      "generated": 54.59999942779541,
+      "consumed": 46.49999962002039,
+      "exported": 15.300000190734863,
       "imported": 0.10000000149011612,
-      "discharged": 17.299999237060547,
+      "discharged": 34,
       "maxPv": 10.548,
-      "net": 34.700001142919064
+      "net": 23.399999998509884
     },
     "steve": {
-      "generated": 46.5,
-      "consumed": 6.000000715255737,
-      "exported": 37.29999923706055,
+      "generated": 55.5,
+      "consumed": 9.000000715255737,
+      "exported": 44.79999923706055,
       "imported": 0,
-      "discharged": 1.7999999523162842,
+      "discharged": 3.299999952316284,
       "maxPv": 7.892,
-      "net": 77.79999852180481
+      "net": 91.29999852180481
     },
     "winner": "Steve",
     "highScores": {
       "generatedMore": {
-        "winner": "Daniel",
-        "value": 50.29999923706055
+        "winner": "Steve",
+        "value": 55.5
       },
       "consumedLess": {
         "winner": "Steve",
-        "value": 6.000000715255737
+        "value": 9.000000715255737
       },
       "soldMore": {
         "winner": "Steve",
-        "value": 37.29999923706055
+        "value": 44.79999923706055
       },
       "importedLess": {
         "winner": "Steve",
@@ -175,7 +175,7 @@
       },
       "dischargedLess": {
         "winner": "Steve",
-        "value": 1.7999999523162842
+        "value": 3.299999952316284
       },
       "highestMaxPv": {
         "winner": "Daniel",
@@ -184,22 +184,22 @@
     },
     "stats": {
       "daniel": {
-        "generated": 50.29999923706055,
-        "consumed": 28.19999847561121,
-        "exported": 12.600000381469727,
+        "generated": 54.59999942779541,
+        "consumed": 46.49999962002039,
+        "exported": 15.300000190734863,
         "imported": 0.10000000149011612,
-        "discharged": 17.299999237060547,
+        "discharged": 34,
         "maxPv": 10.548,
-        "net": 34.700001142919064
+        "net": 23.399999998509884
       },
       "steve": {
-        "generated": 46.5,
-        "consumed": 6.000000715255737,
-        "exported": 37.29999923706055,
+        "generated": 55.5,
+        "consumed": 9.000000715255737,
+        "exported": 44.79999923706055,
         "imported": 0,
-        "discharged": 1.7999999523162842,
+        "discharged": 3.299999952316284,
         "maxPv": 7.892,
-        "net": 77.79999852180481
+        "net": 91.29999852180481
       }
     }
   }
