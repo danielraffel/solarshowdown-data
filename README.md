@@ -53,10 +53,26 @@ Each day, a new champion is crowned based on who harvests the most solar energy 
 
 ## 📊 Data Updates
 
-The dashboard updates automatically throughout the day, pulling fresh data from the solar systems. Leaderboard standings are generated nightly by a scheduled script (cron job at 11:55 PM), which calls `update-daily-leaderboard.sh` to update `daily-leaderboard.json`. A new champion is crowned daily based on overall performance.
+The dashboard updates automatically throughout the day, pulling fresh data from the solar systems. There are two scheduled scripts that keep everything current:
+
+- **Hourly Data Update (Daniel)**  
+A cron job runs [update-data-daniel.sh](update-data-daniel.sh) every hour to fetch the latest solar stats and update [daniel.json](daniel.json) if anything has changed.
 
 **Sample cron job:**
 
+```
+00 * * * * /opt/solarshowdown-data/update-data-daniel.sh >> /opt/solarshowdown-data/update.log 2>&1
+```
+
+- **Hourly Data Update (Steve)**  
+Steve runs a similar script from his machine, pushing updated data roughly one minute after Daniel’s, ensuring both sources are refreshed in near real-time.
+
+- **Nightly Leaderboard Update**  
+Another cron job runs [update-daily-leaderboard.sh](update-daily-leaderboard.sh) at 11:55 PM to regenerate the [daily-leaderboard.json](leaderboard/daily-leaderboard.json), which summarizes the day’s performance and crowns the daily champion.
+
+Behind the scenes, this script invokes [`solar-summary.js`](leaderboard/solar-summary.js), which fetches both users’ solar data, calculates each person’s net energy (generated + exported − consumed), determines the winner, and evaluates bonus categories (like highest generation, lowest import, etc.). If the day's result already exists in the leaderboard, it updates it; otherwise, it appends a new entry and keeps the leaderboard sorted chronologically.
+
+**Sample cron job:**
 ```
 55 23 * * * /opt/solarshowdown-data/update-daily-leaderboard.sh >> /opt/solarshowdown-data/update-leaderboard.log 2>&1
 ```
