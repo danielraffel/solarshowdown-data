@@ -24,3 +24,16 @@ Saved Solar Showdown result for 4/19/2025
 To github.com:danielraffel/solarshowdown-data.git
    4239b94..6ae20af  main -> main
 Daily leaderboard updated successfully
+From github.com:danielraffel/solarshowdown-data
+ * branch            main       -> FETCH_HEAD
+   b8f5af2..e29eca4  main       -> origin/main
+Updating b8f5af2..e29eca4
+Fast-forward
+ steve.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+✅ Saved Solar Showdown result for 2025-04-20
+[main 46ac4be] Update daily leaderboard 2025-04-20 23:55
+ 1 file changed, 69 insertions(+), 1 deletion(-)
+To github.com:danielraffel/solarshowdown-data.git
+   e29eca4..46ac4be  main -> main
+Daily leaderboard updated successfully
