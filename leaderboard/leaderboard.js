@@ -144,6 +144,18 @@ document.getElementById('next-month').addEventListener('click', () => {
 
   // Normal next logic
   const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+
+  // Allow going to current month (no data) if it's after max data month
+  if (
+    newDate.getTime() === nowYearMonth.getTime() &&
+    nowYearMonth.getTime() > maxYearMonth.getTime()
+  ) {
+    currentDate = newDate;
+    renderCalendar();
+    updateNavigationButtons();
+    return;
+  }
+
   if (newDate <= maxYearMonth) {
     currentDate = newDate;
     renderCalendar();
