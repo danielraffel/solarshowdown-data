@@ -133,6 +133,15 @@ document.getElementById('next-month').addEventListener('click', () => {
     return;
   }
 
+  // If on current month (no data), don't go forward
+  if (
+    currentYearMonth.getTime() === nowYearMonth.getTime() &&
+    maxYearMonth.getTime() < nowYearMonth.getTime()
+  ) {
+    // Already at current month, can't go forward
+    return;
+  }
+
   // Normal next logic
   const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
   if (newDate <= maxYearMonth) {
