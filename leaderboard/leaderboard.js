@@ -16,8 +16,15 @@ async function fetchLeaderboardData() {
       minDate = new Date(Math.min.apply(null, dates));
       maxDate = new Date(Math.max.apply(null, dates));
       
-      // Set current date to latest available data month
-      currentDate = new Date(maxDate);
+      const now = new Date();
+      if (
+        now.getFullYear() > maxDate.getFullYear() ||
+        (now.getFullYear() === maxDate.getFullYear() && now.getMonth() > maxDate.getMonth())
+      ) {
+        currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else {
+        currentDate = new Date(maxDate);
+      }
     }
     
     updateChampionshipStats();
