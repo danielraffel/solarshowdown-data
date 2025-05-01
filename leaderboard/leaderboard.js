@@ -343,6 +343,14 @@ function updateMonthlyChampion() {
   if (el) {
     el.textContent = `Champion for ${monthNames[month]} ${year}: ${champion}`;
   }
+  // Add or update the monthly breakdown element
+  let breakdownEl = document.getElementById('monthly-breakdown');
+  if (!breakdownEl) {
+    breakdownEl = document.createElement('div');
+    breakdownEl.id = 'monthly-breakdown';
+    el && el.parentNode.insertBefore(breakdownEl, el.nextSibling);
+  }
+  breakdownEl.innerHTML = `<span class=\"breakdown-label\">This Month:</span> <span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
   // Remove the old monthly-champion element if it exists
   const oldMonthly = document.getElementById('monthly-champion');
   if (oldMonthly) oldMonthly.style.display = 'none';
