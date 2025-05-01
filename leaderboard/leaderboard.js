@@ -62,38 +62,83 @@ function updateNavigationButtons() {
     return;
   }
   
+  const now = new Date();
+  const nowYearMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const currentYearMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const minYearMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
   const maxYearMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
   
-  prevBtn.disabled = currentYearMonth <= minYearMonth;
-  nextBtn.disabled = currentYearMonth >= maxYearMonth;
+  const isCurrentMonthNoData = currentYearMonth.getTime() === nowYearMonth.getTime() && maxYearMonth.getTime() < nowYearMonth.getTime();
+  const isOnLastDataMonth = currentYearMonth.getTime() === maxYearMonth.getTime();
+  
+  // If on current month (no data) allow going back to last data month
+  if (isCurrentMonthNoData) {
+    prevBtn.disabled = false;
+    nextBtn.disabled = true;
+  }
+  // If on last data month and today is after last data month, allow going forward to current month
+  else if (isOnLastDataMonth && nowYearMonth.getTime() > maxYearMonth.getTime()) {
+    prevBtn.disabled = currentYearMonth <= minYearMonth;
+    nextBtn.disabled = false;
+  }
+  // Normal behavior
+  else {
+    prevBtn.disabled = currentYearMonth <= minYearMonth;
+    nextBtn.disabled = currentYearMonth >= maxYearMonth;
+  }
 }
 
 // Calendar navigation
 document.getElementById('prev-month').addEventListener('click', () => {
-  if (minDate) {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const minYearMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    
-    if (newDate >= minYearMonth) {
-      currentDate = newDate;
-      renderCalendar();
-      updateNavigationButtons();
-    }
+  const now = new Date();
+  const nowYearMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const maxYearMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+  const currentYearMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+  // If on current month (no data), go back to last data month
+  if (
+    currentYearMonth.getTime() === nowYearMonth.getTime() &&
+    maxYearMonth.getTime() < nowYearMonth.getTime()
+  ) {
+    currentDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+    renderCalendar();
+    updateNavigationButtons();
+    return;
+  }
+
+  // Normal prev logic
+  const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  const minYearMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  if (newDate >= minYearMonth) {
+    currentDate = newDate;
+    renderCalendar();
+    updateNavigationButtons();
   }
 });
 
 document.getElementById('next-month').addEventListener('click', () => {
-  if (maxDate) {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    const maxYearMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
-    
-    if (newDate <= maxYearMonth) {
-      currentDate = newDate;
-      renderCalendar();
-      updateNavigationButtons();
-    }
+  const now = new Date();
+  const nowYearMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const maxYearMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+  const currentYearMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+  // If on last data month and today is after last data month, go to current month (no data)
+  if (
+    currentYearMonth.getTime() === maxYearMonth.getTime() &&
+    nowYearMonth.getTime() > maxYearMonth.getTime()
+  ) {
+    currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    renderCalendar();
+    updateNavigationButtons();
+    return;
+  }
+
+  // Normal next logic
+  const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+  if (newDate <= maxYearMonth) {
+    currentDate = newDate;
+    renderCalendar();
+    updateNavigationButtons();
   }
 });
 
