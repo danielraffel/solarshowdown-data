@@ -328,8 +328,8 @@ function updateMonthlyChampion() {
   const month = currentDate.getMonth();
   let danielWins = 0, steveWins = 0;
   leaderboardData.forEach(day => {
-    const d = new Date(day.date);
-    if (d.getFullYear() === year && d.getMonth() === month) {
+    const [dataYear, dataMonth] = day.date.split('-').map(Number);
+    if (dataYear === year && dataMonth === month + 1) {
       if (day.winner === 'Daniel') danielWins++;
       else if (day.winner === 'Steve') steveWins++;
     }
@@ -350,7 +350,7 @@ function updateMonthlyChampion() {
     breakdownEl.id = 'monthly-breakdown';
     el && el.parentNode.insertBefore(breakdownEl, el.nextSibling);
   }
-  breakdownEl.innerHTML = `<span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
+  breakdownEl.innerHTML = `<span class=\"breakdown-label\">This Month:</span> <span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
   // Remove the old monthly-champion element if it exists
   const oldMonthly = document.getElementById('monthly-champion');
   if (oldMonthly) oldMonthly.style.display = 'none';
