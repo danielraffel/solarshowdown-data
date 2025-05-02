@@ -350,7 +350,7 @@ function updateMonthlyChampion() {
     breakdownEl.id = 'monthly-breakdown';
     el && el.parentNode.insertBefore(breakdownEl, el.nextSibling);
   }
-  breakdownEl.innerHTML = `<span class=\"breakdown-label\">This Month:</span> <span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
+  breakdownEl.innerHTML = `<span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
   // Remove the old monthly-champion element if it exists
   const oldMonthly = document.getElementById('monthly-champion');
   if (oldMonthly) oldMonthly.style.display = 'none';
