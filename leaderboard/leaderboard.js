@@ -350,7 +350,13 @@ function updateMonthlyChampion() {
     breakdownEl.id = 'monthly-breakdown';
     el && el.parentNode.insertBefore(breakdownEl, el.nextSibling);
   }
-  breakdownEl.innerHTML = `<span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} wins,</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} wins</span>`;
+  
+  // Use singular "win" for count of 1, plural "wins" otherwise
+  const danielWinText = danielWins === 1 ? 'win' : 'wins';
+  const steveWinText = steveWins === 1 ? 'win' : 'wins';
+  
+  breakdownEl.innerHTML = `<span style=\"color: var(--color-daniel)\">Daniel</span> <span class=\"breakdown-wins\">${danielWins} ${danielWinText},</span> <span style=\"color: var(--color-steve)\">Steve</span> <span class=\"breakdown-wins\">${steveWins} ${steveWinText}</span>`;
+  
   // Remove the old monthly-champion element if it exists
   const oldMonthly = document.getElementById('monthly-champion');
   if (oldMonthly) oldMonthly.style.display = 'none';
