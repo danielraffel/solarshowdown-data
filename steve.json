@@ -1,1 +1,1 @@
-{"generated":0,"consumed":0,"exported":0,"imported":0,"discharged":0,"maxPv":0,"error":"query failed for lux_Epv1_day: Post \"http://10.0.0.102:8086/api/v2/query?org=wisconsin\": dial tcp 10.0.0.102:8086: connect: no route to host"}
+{"generated":53.09999942779541,"consumed":8.56340625,"exported":20.899999618530273,"imported":1.2000000476837158,"discharged":0.800000011920929,"maxPv":5.88}
