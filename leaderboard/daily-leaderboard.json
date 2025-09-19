@@ -10402,5 +10402,73 @@
         "net": 43.919049209594725
       }
     }
+  },
+  {
+    "date": "2025-09-18",
+    "daniel": {
+      "generated": 32.4000015258789,
+      "consumed": 25.87573828125,
+      "exported": 13.600000381469727,
+      "imported": 18.100000381469727,
+      "discharged": 22.899999618530273,
+      "maxPv": 0.118,
+      "net": 20.124263626098625
+    },
+    "steve": {
+      "generated": 44,
+      "consumed": 8.81069921875,
+      "exported": 20,
+      "imported": 3.4000000953674316,
+      "discharged": 21.200000762939453,
+      "maxPv": 8.002,
+      "net": 55.18930078125
+    },
+    "winner": "Steve",
+    "highScores": {
+      "generatedMore": {
+        "winner": "Steve",
+        "value": 44
+      },
+      "consumedLess": {
+        "winner": "Steve",
+        "value": 8.81069921875
+      },
+      "soldMore": {
+        "winner": "Steve",
+        "value": 20
+      },
+      "importedLess": {
+        "winner": "Steve",
+        "value": 3.4000000953674316
+      },
+      "dischargedLess": {
+        "winner": "Steve",
+        "value": 21.200000762939453
+      },
+      "highestMaxPv": {
+        "winner": "Steve",
+        "value": 8.002
+      }
+    },
+    "stats": {
+      "daniel": {
+        "generated": 32.4000015258789,
+        "consumed": 25.87573828125,
+        "exported": 13.600000381469727,
+        "imported": 18.100000381469727,
+        "discharged": 22.899999618530273,
+        "maxPv": 0.118,
+        "net": 20.124263626098625
+      },
+      "steve": {
+        "generated": 44,
+        "consumed": 8.81069921875,
+        "exported": 20,
+        "imported": 3.4000000953674316,
+        "discharged": 21.200000762939453,
+        "maxPv": 8.002,
+        "net": 55.18930078125
+      }
+    }
   }
 ]
