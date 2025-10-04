@@ -1,1 +1,1 @@
-{"generated":28.400001525878906,"consumed":42.41985546875,"exported":0.10000000149011612,"imported":25.299999237060547,"discharged":12.100000381469727,"maxPv":9.199}
+{"generated":0,"consumed":0,"exported":0,"imported":0,"discharged":0,"maxPv":0,"error":"query failed for lux_Epv_all: invalid: error in building plan while starting program: cannot query an empty range"}
