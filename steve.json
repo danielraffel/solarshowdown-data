@@ -1,1 +1,1 @@
-{"generated":33.09999942779541,"consumed":6.66387744140625,"exported":23.5,"imported":0.10000000149011612,"discharged":4.5,"maxPv":5.715}
+{"generated":0,"consumed":0,"exported":0,"imported":0,"discharged":0,"maxPv":0,"error":"query failed for lux_Epv1_day: Post \"http://10.0.0.102:8086/api/v2/query?org=wisconsin\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
