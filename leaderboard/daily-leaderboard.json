@@ -12103,5 +12103,74 @@
         "net": 0
       }
     }
+  },
+  {
+    "date": "2025-10-13",
+    "daniel": {
+      "generated": 13.09999942779541,
+      "consumed": 10.0438857421875,
+      "exported": 0,
+      "imported": 32.79999923706055,
+      "discharged": 5,
+      "maxPv": 7.504,
+      "net": 3.05611368560791
+    },
+    "steve": {
+      "generated": 0,
+      "consumed": 0,
+      "exported": 0,
+      "imported": 0,
+      "discharged": 0,
+      "maxPv": 0,
+      "error": "query failed for lux_Epv1_day: Post \"http://10.0.0.102:8086/api/v2/query?org=wisconsin\": dial tcp 10.0.0.102:8086: i/o timeout",
+      "net": 0
+    },
+    "winner": "Daniel",
+    "highScores": {
+      "generatedMore": {
+        "winner": "Daniel",
+        "value": 13.09999942779541
+      },
+      "consumedLess": {
+        "winner": "Steve",
+        "value": 0
+      },
+      "soldMore": {
+        "winner": "Tied",
+        "value": 0
+      },
+      "importedLess": {
+        "winner": "Steve",
+        "value": 0
+      },
+      "dischargedLess": {
+        "winner": "Steve",
+        "value": 0
+      },
+      "highestMaxPv": {
+        "winner": "Daniel",
+        "value": 7.504
+      }
+    },
+    "stats": {
+      "daniel": {
+        "generated": 13.09999942779541,
+        "consumed": 10.0438857421875,
+        "exported": 0,
+        "imported": 32.79999923706055,
+        "discharged": 5,
+        "maxPv": 7.504,
+        "net": 3.05611368560791
+      },
+      "steve": {
+        "generated": 0,
+        "consumed": 0,
+        "exported": 0,
+        "imported": 0,
+        "discharged": 0,
+        "maxPv": 0,
+        "net": 0
+      }
+    }
   }
 ]
