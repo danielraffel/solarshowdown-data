@@ -1,1 +1,1 @@
-{"generated":0,"consumed":0,"exported":0,"imported":0,"discharged":0,"maxPv":0,"error":"query failed for lux_Epv1_day: Post \"http://10.0.0.102:8086/api/v2/query?org=wisconsin\": dial tcp 10.0.0.102:8086: i/o timeout"}
+{"generated":0,"consumed":0,"exported":0,"imported":0,"discharged":0,"maxPv":0}
